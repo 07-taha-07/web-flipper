@@ -281,16 +281,20 @@
 import js_input_bridge
 import sys
 import time
+import pyodide_http
+pyodide_http.patch_all()
 
-# Arayüz köprüsü (Buna dokunma, sitemizin terminal inputunu çalıştırır)
+
+# Tarayıcıda input döngüsünün donmasını engelleyen asenkron destekli köprü
 def input(prompt=""):
     if prompt:
         print(prompt)
+    # Giriş kuyruğunu temizle ve bekle
     while True:
         val = js_input_bridge.get_input()
         if val is not None:
-            return val
-        time.sleep(0.1)
+            return str(val)
+        time.sleep(0.2) # Tarayıcıyı kilitlememek için bekleme süresini hafifçe artırdık
 
 #SMS Tool by; @OyunBozanlar <> @OyunBozanlar
 
