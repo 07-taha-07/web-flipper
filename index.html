@@ -205,8 +205,8 @@
 
     <div id="sms-mod" class="module-panel">
         <h4>⚡ sms_bomber_ob.py TERMINAL</h4>
-        <label id="sms-prompt-lbl">Telefon Numarası Girin:</label>
-        <input type="text" id="sms-input" placeholder="Örn: 5403302010" oninput="validateNumberOnly(this)">
+        <label id="sms-prompt-lbl">TELEFON NUMARASI YAZIN. Örn: '5403302010'</label>
+        <input type="text" id="sms-input" placeholder="5xxxxxxxxx" oninput="validateNumberOnly(this)">
         
         <button class="ctrl-btn" id="sms-send-btn" onclick="handleTerminalInput()">VERİYİ GÖNDER</button>
         
@@ -223,7 +223,7 @@
 
 <script>
     // ==========================================
-    // SCRIPT AKIŞINI BİREBİR YANSITAN MOTOR (JS)
+    // SCRIPT AKIŞINI DOĞRUDAN BAŞLATAN MOTOR (JS)
     // ==========================================
     let currentStep = "NUMBER"; // NUMBER, AMOUNT, SPEED, RUNNING, FINISHED
     let userPhone = "";
@@ -236,18 +236,24 @@
         input.value = input.value.replace(/[^0-9]/g, '');
     }
 
+    // Sekmeye basılınca ara vermeden doğrudan script ilk çıktısını terminale basan fonksiyon
     function initSmsModule() {
         currentStep = "NUMBER";
         loopCounter = 0;
         if(mainLoopInterval) clearInterval(mainLoopInterval);
         
+        // Input ve label ayarları
         document.getElementById("sms-prompt-lbl").innerText = "TELEFON NUMARASI YAZIN. Örn: '5403302010'";
         document.getElementById("sms-input").placeholder = "5xxxxxxxxx";
         document.getElementById("sms-input").value = "";
         document.getElementById("sms-input").disabled = false;
         document.getElementById("sms-send-btn").disabled = false;
         
+        // Terminal ekranını temizleyip doğrudan ilk python promptunu yazdırıyoruz
+        let container = document.getElementById('displayLogs');
+        container.innerHTML = ""; // Önceki logları sil
         printLog("python sms_bomber_ob.py");
+        printLog("TELEFON NUMARASI YAZIN. Örn: '5403302010'");
     }
 
     function handleTerminalInput() {
@@ -256,15 +262,17 @@
         const val = inputField.value.trim();
         if(!val) return;
 
-        printLog(`>> ${val}`); // Kullanıcının yazdığını terminal satırına yansıt
+        printLog(`>> ${val}`); // Yazılan girdiyi Pydroid 3 terminalindeki gibi ekrana yansıt
         inputField.value = "";
 
         if (currentStep === "NUMBER") {
             if(val.length >= 10 && val.startsWith("5")) {
                 userPhone = val;
                 currentStep = "AMOUNT";
+                // Doğrudan scriptin ikinci sorusunu terminale ve etikete basıyoruz
                 document.getElementById("sms-prompt-lbl").innerText = "KAÇ SMS GÖNDERİLSİN? SINIRSIZ İÇİN '0' YAZIN";
                 document.getElementById("sms-input").placeholder = "Miktar girin...";
+                printLog("KAÇ SMS GÖNDERİLSİN? SINIRSIZ İÇİN '0' YAZIN");
             } else {
                 printLog("[-] Hatalı numara biçimi girildi! Tekrar deneyin.", true);
             }
@@ -272,14 +280,16 @@
         else if (currentStep === "AMOUNT") {
             userAmount = parseInt(val, 10);
             currentStep = "SPEED";
+            // Doğrudan scriptin üçüncü sorusunu terminale ve etikete basıyoruz
             document.getElementById("sms-prompt-lbl").innerText = "SMS GÖNDERME HIZINI GİRİN (Tavsiye edilen: 5-100)";
             document.getElementById("sms-input").placeholder = "Hız katsayısı...";
+            printLog("SMS GÖNDERME HIZINI GİRİN (Tavsiye edilen: 5-100)");
         } 
         else if (currentStep === "SPEED") {
             userSpeed = parseInt(val, 10);
             if(userSpeed < 1) userSpeed = 5;
             
-            // Parametre girişleri bitti, simüle Python döngüsünü başlat
+            // Tüm parametreler girildi, döngüyü gecikmesiz tetikle
             startScriptEngine();
         }
     }
@@ -295,17 +305,17 @@
 
         const brands = ["A101", "BIM", "Defacto", "Migros", "CepteSok", "BiSU", "TıklaGelsin", "SakaSu", "Marti", "Hop"];
         
-        // Hız katsayısına göre akış milisaniyesi hesaplama
+        // Hız katsayısına göre milisaniye gecikmesi
         const delay = Math.max(150, 3000 / userSpeed);
 
         mainLoopInterval = setInterval(() => {
             loopCounter++;
             const randomBrand = brands[loopCounter % brands.length];
             
-            // Python'ın print çıktılarını terminale basıyoruz
+            // Script loglarını terminal ekranına yazdır
             printLog(`[+] [İstek #${loopCounter}] -> ${randomBrand} API simüle edildi.`);
 
-            // Eğer limit varsa ve limite ulaşıldıysa durdur
+            // Limite ulaşınca güvenli çıkış yap
             if(userAmount !== 0 && loopCounter >= userAmount) {
                 clearInterval(mainLoopInterval);
                 currentStep = "FINISHED";
@@ -370,10 +380,11 @@
         document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(modId).classList.add('active');
         event.currentTarget.classList.add('active');
-        printLog(`Modül aktif: ${modId.replace('-mod', '').toUpperCase()}`);
         
         if (modId === 'sms-mod') {
             initSmsModule();
+        } else {
+            printLog(`Modül aktif: ${modId.replace('-mod', '').toUpperCase()}`);
         }
     }
 
