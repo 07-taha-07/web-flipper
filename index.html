@@ -55,7 +55,7 @@
         /* İŞLETİM SİSTEMİ SEKMELERİ */
         .os-menu {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 6px;
             margin-bottom: 20px;
         }
@@ -63,12 +63,13 @@
             background-color: #1a1a1a;
             color: #ff8c00;
             border: 1px solid #ff8c00;
-            padding: 12px 4px;
-            font-size: 11px;
+            padding: 12px 2px;
+            font-size: 10px;
             font-weight: bold;
             cursor: pointer;
             font-family: monospace;
             border-radius: 4px;
+            text-align: center;
         }
         .menu-btn.active {
             background-color: #ff8c00;
@@ -116,10 +117,9 @@
         }
         button.ctrl-btn:active { background-color: #cc7000; }
 
-        /* ÖZEL KARE METADATA GÖRSEL SEÇİM ALANI */
         .image-drop-zone {
-            width: 130px;
-            height: 130px;
+            width: 110px;
+            height: 110px;
             border: 2px dashed #ff8c00;
             border-radius: 12px;
             margin: 15px auto;
@@ -131,56 +131,37 @@
             background-color: #111;
             overflow: hidden;
             position: relative;
-            transition: background 0.2s, border-color 0.2s;
         }
-        .image-drop-zone:hover {
-            background-color: #1a1a1a;
-            border-color: #ffaa00;
-        }
-        .image-drop-zone span {
-            font-size: 11px;
-            color: #ff8c00;
-            text-align: center;
-            padding: 5px;
-            pointer-events: none;
-        }
-        .image-drop-zone img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            top: 0;
-            left: 0;
-            display: none;
-        }
+        .image-drop-zone span { font-size: 10px; color: #ff8c00; text-align: center; }
+        .image-drop-zone img { width: 100%; height: 100%; object-fit: cover; position: absolute; display: none; }
     </style>
 </head>
 <body>
 
 <div class="flipper-device">
     <div class="flipper-screen" id="flipperScreen">
-        <div class="screen-title">🐬 FLIPPER REAL-OS v4.0</div>
+        <div class="screen-title">🐬 FLIPPER REAL-OS v5.0</div>
         <div id="displayLogs">
             <div class="terminal-row">> %100 Saf Donanım Modu aktif.</div>
-            <div class="terminal-row">> Derin OSINT ve Turnike ses sürücüleri hazır.</div>
+            <div class="terminal-row">> Akustik sinyal sniffer yükleniyor...</div>
         </div>
     </div>
 
     <div class="os-menu">
-        <button class="menu-btn active" onclick="changeModule('nfc-mod')">NFC READER</button>
+        <button class="menu-btn active" onclick="changeModule('nfc-mod')">NFC</button>
         <button class="menu-btn" onclick="changeModule('usb-mod')">BAD USB</button>
-        <button class="menu-btn" onclick="changeModule('net-mod')">PING TOOL</button>
+        <button class="menu-btn" onclick="changeModule('net-mod')">PING</button>
         <button class="menu-btn" onclick="changeModule('meta-mod')">METADATA</button>
+        <button class="menu-btn" onclick="changeModule('sig-mod')">SIGNAL SCAN</button>
     </div>
 
     <div id="nfc-mod" class="module-panel active">
         <h4>💳 HARDWARE NFC SCANNER</h4>
-        <button class="ctrl-btn" onclick="runNFCSys('SCAN')">KARTI OKUMAYA BAŞLA</button>
+        <button class="ctrl-btn" onclick="runNFCSys()">KARTI OKUMAYA BAŞLA</button>
     </div>
 
     <div id="usb-mod" class="module-panel">
-        <h4>⌨️ BAD USB SCRIPT GENERATOR</h4>
-        <label>Saldırı Senaryosu Seçin:</label>
+        <h4>⌨️ BAD USB GENERATOR</h4>
         <select id="usb-payload">
             <option value="WIFI">Kayıtlı Wi-Fi Şifrelerini Göster</option>
             <option value="LOCK">Hedef Bilgisayarı Kilitle</option>
@@ -191,23 +172,24 @@
 
     <div id="net-mod" class="module-panel">
         <h4>🌐 NETWORK ICMP PING</h4>
-        <label>Hedef Cihazın IP Adresi:</label>
         <input type="text" id="target-ip" value="192.168.1.1">
-        <button class="ctrl-btn" onclick="runNetworkSys('PING')">CANLI PİNG GÖNDER</button>
+        <button class="ctrl-btn" onclick="runNetworkSys()">CANLI PİNG GÖNDER</button>
     </div>
 
     <div id="meta-mod" class="module-panel">
         <h4>📁 OSINT IMAGE DECODER</h4>
-        <label style="text-align: center;">Fotoğraf Seçmek İçin Kareye Dokunun:</label>
-        
         <input type="file" id="meta-file" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
-        
         <div class="image-drop-zone" onclick="document.getElementById('meta-file').click()">
-            <span id="upload-text">➕<br><br>GALERİDEN SEÇ</span>
+            <span id="upload-text">➕<br>GALERİDEN SEÇ</span>
             <img id="preview-img" alt="Önizleme">
         </div>
+        <button class="ctrl-btn" onclick="runMetadataSys()">METADATAYI TARAMA YAP</button>
+    </div>
 
-        <button class="ctrl-btn" onclick="runMetadataSys()">METADATAYI DERİN TARAMA YAP</button>
+    <div id="sig-mod" class="module-panel">
+        <h4>🎙️ ACOUSTIC FREQUENCY SCANNER</h4>
+        <label style="text-align: center; margin-bottom: 15px; font-size: 11px; color: #888;">Ortamdaki analog ses frekansı dalgalarını canlı olarak tarar ve ayrıştırır.</label>
+        <button class="ctrl-btn" id="scan-toggle-btn" onclick="runSignalSys()">TARA / DURDUR</button>
     </div>
 </div>
 
@@ -215,69 +197,36 @@
 <script src="nfc_core.js"></script>
 <script src="network_scanner.js"></script>
 <script src="metadata_analyzer.js"></script>
+<script src="signal_scanner.js"></script>
 
 <script>
-    // Gelişmiş Ses Sentezleyici (Sıfır Dosya - %100 Gerçek Frekans Üretimi)
     function playFlipperSound(type) {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
             if (type === 'click') {
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(850, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.02); 
-            } 
-            else if (type === 'success') {
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.type = 'square';
-                oscillator.frequency.setValueAtTime(1300, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.08);
-            } 
-            // Turnike Geçiş Başarılı Onay Sesi (Mekanik Çift Tonlu "Trink" Etkisi)
-            else if (type === 'trink') {
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'square';
+                osc.frequency.setValueAtTime(850, audioCtx.currentTime); gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.02); 
+            } else if (type === 'success') {
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'square';
+                osc.frequency.setValueAtTime(1300, audioCtx.currentTime); gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'trink') {
                 const now = audioCtx.currentTime;
-                
-                // 1. Ton (Yüksek ve net frekans başlangıcı)
-                const osc1 = audioCtx.createOscillator();
-                const gain1 = audioCtx.createGain();
-                osc1.connect(gain1);
-                gain1.connect(audioCtx.destination);
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(1800, now);
-                gain1.gain.setValueAtTime(0.06, now);
-                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                osc1.start(now);
-                osc1.stop(now + 0.15);
-
-                // 2. Ton (Hemen milisaniye sonra vuran armoni)
-                const osc2 = audioCtx.createOscillator();
-                const gain2 = audioCtx.createGain();
-                osc2.connect(gain2);
-                gain2.connect(audioCtx.destination);
-                osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(2200, now + 0.04);
-                gain2.gain.setValueAtTime(0.05, now + 0.04);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-                osc2.start(now + 0.04);
-                osc2.stop(now + 0.2);
+                const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+                osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(1800, now); gain1.gain.setValueAtTime(0.06, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15); osc1.start(now); osc1.stop(now + 0.15);
+                const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+                osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(2200, now + 0.04); gain2.gain.setValueAtTime(0.05, now + 0.04);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2); osc2.start(now + 0.04); osc2.stop(now + 0.2);
             }
-        } catch (e) {
-            console.log("Ses motoru donanım engeline takıldı.");
-        }
+        } catch (e) {}
     }
 
-    // Galeri Seçim Yönetimi (Kare içine resmi basar)
     function handleFileSelect(input) {
         const file = input.files[0];
         if (file) {
@@ -286,11 +235,9 @@
             reader.onload = function(e) {
                 const imgElement = document.getElementById('preview-img');
                 const textElement = document.getElementById('upload-text');
-                
                 imgElement.src = e.target.result;
-                imgElement.style.display = 'block'; // Resmi göster
-                textElement.style.display = 'none'; // Yazıyı gizle
-                
+                imgElement.style.display = 'block';
+                textElement.style.display = 'none';
                 printLog(`Görsel belleğe yüklendi: ${file.name}`);
             };
             reader.readAsDataURL(file);
@@ -301,10 +248,8 @@
         playFlipperSound('click');
         document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-        
         document.getElementById(modId).classList.add('active');
         event.currentTarget.classList.add('active');
-        
         printLog(`Modül aktif: ${modId.replace('-mod', '').toUpperCase()}`);
     }
 
@@ -315,52 +260,26 @@
         if(isError) row.style.color = '#ff3333';
         row.innerText = `> ${text}`;
         container.appendChild(row);
-        
         let screen = document.getElementById('flipperScreen');
         screen.scrollTop = screen.scrollHeight;
     }
 
-    // NFC Tetikleyici
-    function runNFCSys(mode) {
-        playFlipperSound('click');
-        if(typeof startNFCScan === "function") {
-            startNFCScan(printLog);
-        }
-    }
-
-    // Bad USB Tetikleyici
+    function runNFCSys() { playFlipperSound('click'); if(typeof startNFCScan === "function") startNFCScan(printLog); }
     function runBedUSBSys() {
         playFlipperSound('click');
         let type = document.getElementById('usb-payload').value;
-        if(typeof generateBadUsb === "function") {
-            generateBadUsb(type);
-            playFlipperSound('success');
-            printLog(`DuckyScript üretildi ve panoya alındı.`);
-        }
+        if(typeof generateBadUsb === "function") { generateBadUsb(type); playFlipperSound('success'); }
     }
-
-    // Ping Tetikleyici
-    function runNetworkSys(mode) {
+    function runNetworkSys() { playFlipperSound('click'); let target = document.getElementById('target-ip').value; if(typeof executePing === "function") executePing(target, printLog); }
+    function runMetadataSys() { playFlipperSound('click'); const file = document.getElementById('meta-file').files[0]; if(typeof analyzeImageMetadata === "function") { analyzeImageMetadata(file, printLog); playFlipperSound('success'); } }
+    
+    // Sinyal Tarayıcı Tetikleyicisi
+    function runSignalSys() {
         playFlipperSound('click');
-        let target = document.getElementById('target-ip').value;
-        if(typeof executePing === "function") {
-            executePing(target, printLog);
-        }
-    }
-
-    // Metadata Derin Analiz Tetikleyicisi
-    function runMetadataSys() {
-        playFlipperSound('click');
-        const fileInput = document.getElementById('meta-file');
-        const file = fileInput.files[0];
-        if(typeof analyzeImageMetadata === "function") {
-            analyzeImageMetadata(file, printLog);
-            playFlipperSound('success');
-        } else {
-            printLog("Metadata motor dosyası eksik!", true);
+        if (typeof toggleSignalScanner === "function") {
+            toggleSignalScanner(printLog);
         }
     }
 </script>
-
 </body>
 </html>
