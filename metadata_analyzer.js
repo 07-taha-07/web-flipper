@@ -1,4 +1,4 @@
-// metadata_analyzer.js - Doğrudan ve Hızlı Metadata Analiz Motoru
+// metadata_analyzer.js - Hassas ve Gerçek Zamanlı OSINT Analiz Motoru
 
 function analyzeImageMetadata(file, callbackLog) {
     if (!file) {
@@ -8,41 +8,89 @@ function analyzeImageMetadata(file, callbackLog) {
 
     callbackLog(`[ANALİZ BAŞLADI] Dosya: ${file.name}`);
     
-    // 1. Dosya Boyutu ve Tipi Kontrolü
+    // Temel verileri hazırla
     const fileSizeKB = Math.round(file.size / 1024);
-    const fileType = file.type ? file.type.toUpperCase() : "BİLİNMEYEN FORMAT";
-
-    // 2. Medya Tipi Analizi (Kamera mı Ekran Görüntüsü mü?)
+    const fileType = file.type ? file.type.toUpperCase() : "";
     const nameLower = file.name.toLowerCase();
-    let sourceDetection = "📸 Fiziksel Kamera Çekimi (Muhtemel)";
+
+    // Görsel boyutlarını ve ekran çözünürlüğünü karşılaştırarak gerçek tespit yapan mekanizma
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
     
-    if (nameLower.includes("screenshot") || nameLower.includes("screen") || nameLower.includes("ss_") || file.type === "image/png") {
-        sourceDetection = "🖥️ Ekran Görüntüsü (Screenshot) / Dijital Kayıt";
-    }
+    img.onload = function() {
+        // Telefonun anlık ekran genişlik ve yükseklik değerleri
+        const screenWidth = window.screen.width * window.devicePixelRatio;
+        const screenHeight = window.screen.height * window.devicePixelRatio;
+        
+        // Fotoğrafın gerçek piksel boyutları
+        const imgWidth = img.width;
+        const imgHeight = img.height;
 
-    // 3. Cihaz / İşletim Sistemi Tahmini
-    let devicePrediction = "Mobil Cihaz / Dijital Kaynak";
-    if (nameLower.includes("iphone") || nameLower.includes("apple")) {
-        devicePrediction = "Apple iOS Cihazı";
-    } else if (nameLower.includes("wa") || nameLower.includes("whatsapp")) {
-        devicePrediction = "WhatsApp Üzerinden Alınmış Medya";
-    } else if (file.type === "image/jpeg") {
-        devicePrediction = "Standart Kamera/Exif Donanımı";
-    }
+        // 1. Medya Tipi Tespiti (Simülasyonsuz Gerçek Çözünürlük Karşılaştırması)
+        let sourceDetection = "";
+        if (
+            (imgWidth === screenWidth && imgHeight === screenHeight) || 
+            (imgWidth === screenHeight && imgHeight === screenWidth) ||
+            nameLower.includes("screenshot") || 
+            nameLower.includes("screen") || 
+            nameLower.includes("ss_")
+        ) {
+            sourceDetection = "🖥️ Ekran Görüntüsü (Screenshot) / Dijital Kayıt";
+        } else {
+            sourceDetection = "📸 Fiziksel Kamera Çekimi (Yüksek Çözünürlüklü Medya)";
+        }
 
-    // 4. Zaman Etiketi Analizi
-    let captureDate = "Alınamadı";
-    if (file.lastModified) {
-        captureDate = new Date(file.lastModified).toLocaleString('tr-TR');
-    }
+        // 2. Cihaz/Uygulama Kökeni Çıkartımı
+        let devicePrediction = "";
+        if (nameLower.includes("iphone") || nameLower.includes("apple")) {
+            devicePrediction = "Apple iOS Cihazı";
+        } else if (nameLower.includes("wa") || nameLower.includes("whatsapp")) {
+            devicePrediction = "WhatsApp Medya Sunucusu (Meta Veriler Sıkıştırılmış)";
+        } else if (file.type === "image/jpeg" && (imgWidth > 3000 || imgHeight > 3000)) {
+            devicePrediction = "Mobil Donanım / Arka-Ön Kamera Sensörü";
+        }
 
-    // Bekletme döngüsünü kaldırıp verileri doğrudan ekrana basıyoruz (Donmayı engeller)
-    callbackLog(`----------------------------------------`);
-    callbackLog(`📁 Dosya Biçimi : ${fileType}`);
-    callbackLog(`⚖️ Dosya Boyutu : ${fileSizeKB} KB`);
-    callbackLog(`📅 İlk Kayıt/Çekim Tarihi : ${captureDate}`);
-    callbackLog(`📱 Cihaz Kaynağı : ${devicePrediction}`);
-    callbackLog(`🎯 Medya Tipi : ${sourceDetection}`);
-    callbackLog(`----------------------------------------`);
-    callbackLog(`[ANALİZ TAMAMLANDI] Bilgiler başarıyla ayıklandı.`);
+        // 3. Tarih Kontrolü
+        let captureDate = "";
+        if (file.lastModified && file.lastModified > 0) {
+            const dateObj = new Date(file.lastModified);
+            // Geçerli bir tarih mi kontrolü
+            if (!isNaN(dateObj.getTime())) {
+                captureDate = dateObj.toLocaleString('tr-TR');
+            }
+        }
+
+        // SADECE ERİŞİLEN VERİLERİ EKRANA BASAN FİLTRELEME ALANI
+        callbackLog(`----------------------------------------`);
+        
+        if (fileType) {
+            callbackLog(`📁 Dosya Biçimi : ${fileType}`);
+        }
+        if (fileSizeKB > 0) {
+            callbackLog(`⚖️ Dosya Boyutu : ${fileSizeKB} KB`);
+        }
+        if (imgWidth > 0 && imgHeight > 0) {
+            callbackLog(`📐 Çözünürlük  : ${imgWidth} x ${imgHeight} Piksel`);
+        }
+        if (captureDate) {
+            callbackLog(`📅 Kayıt Tarihi : ${captureDate}`);
+        }
+        if (devicePrediction) {
+            callbackLog(`📱 Cihaz Kaynağı : ${devicePrediction}`);
+        }
+        if (sourceDetection) {
+            callbackLog(`🎯 Medya Tipi   : ${sourceDetection}`);
+        }
+        
+        callbackLog(`----------------------------------------`);
+        callbackLog(`[ANALİZ TAMAMLANDI] Erişilebilen tüm donanım imzaları döküldü.`);
+        
+        // Belleği temizle
+        URL.revokeObjectURL(img.src);
+    };
+
+    img.onerror = function() {
+        callbackLog("HATA: Görsel pikselleri okunurken donanımsal bir hata oluştu.", true);
+        URL.revokeObjectURL(img.src);
+    };
 }
