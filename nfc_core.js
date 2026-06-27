@@ -1,6 +1,6 @@
 async function startNFCScan(callback) {
     if (!('NDEFReader' in window)) {
-        callback("[HATA] Cihaz desteklemiyor.", null);
+        callback({ status: "HATA", message: "Tarayıcı desteklemiyor." });
         return;
     }
 
@@ -9,16 +9,16 @@ async function startNFCScan(callback) {
         await ndef.scan();
 
         ndef.onreading = event => {
-            // UID verisi mutlaka olmalı
             if (event.serialNumber) {
-                callback("OK", { uid: event.serialNumber });
+                // UID verisini direkt gönderiyoruz
+                callback({ status: "SUCCESS", uid: event.serialNumber });
             }
         };
 
         ndef.onreadingerror = () => {
-            callback("[HATA] Kart okunamadı.", null);
+            callback({ status: "HATA", message: "Okuma hatası." });
         };
     } catch (e) {
-        callback(`[HATA] ${e.message}`, null);
+        callback({ status: "HATA", message: e.message });
     }
 }
