@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FLIPPER REAL TOOLKIT</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <style>
         body {
             background-color: #0b0b0b;
@@ -142,7 +141,6 @@
             text-transform: uppercase;
             margin-top: 5px;
         }
-        button.ctrl-btn:disabled { background-color: #555; color: #888; cursor: not-allowed; }
         
         /* SMS PANEL BUTONLARI */
         .sms-btn-grid {
@@ -206,15 +204,15 @@
     </div>
 
     <div id="sms-mod" class="module-panel">
-        <h4>⚡ sms_bomber_ob.py ENGINE</h4>
-        <label id="sms-prompt-lbl">Python ortamı yükleniyor...</label>
-        <input type="text" id="sms-input" placeholder="Yükleniyor..." disabled oninput="validateNumberOnly(this)">
+        <h4>⚡ sms_bomber_ob.py TERMINAL</h4>
+        <label id="sms-prompt-lbl">Telefon Numarası Girin:</label>
+        <input type="text" id="sms-input" placeholder="Örn: 5403302010" oninput="validateNumberOnly(this)">
         
-        <button class="ctrl-btn" id="sms-send-btn" disabled onclick="sendInputToPython()">VERİYİ GÖNDER</button>
+        <button class="ctrl-btn" id="sms-send-btn" onclick="handleTerminalInput()">VERİYİ GÖNDER</button>
         
         <div class="sms-btn-grid">
-            <button class="sms-sub-btn" id="sms-restart-btn" onclick="restartPythonScript()">🔄 YENİDEN BAŞLAT</button>
-            <button class="sms-sub-btn" id="sms-stop-btn" onclick="stopPythonScript()">🛑 SONLANDIR</button>
+            <button class="sms-sub-btn" id="sms-restart-btn" onclick="restartSmsTerminal()">🔄 YENİDEN BAŞLAT</button>
+            <button class="sms-sub-btn" id="sms-stop-btn" onclick="stopSmsTerminal()">🛑 SONLANDIR</button>
         </div>
     </div>
 </div>
@@ -225,141 +223,123 @@
 
 <script>
     // ==========================================
-    // CANLI WEB-PYTHON MOTORU AYARLARI (PYODIDE)
+    // SCRIPT AKIŞINI BİREBİR YANSITAN MOTOR (JS)
     // ==========================================
-    let pyodideInstance = null;
-    let inputQueue = []; // Python'ın input() çağrılarını besleyen veri kuyruğu
+    let currentStep = "NUMBER"; // NUMBER, AMOUNT, SPEED, RUNNING, FINISHED
+    let userPhone = "";
+    let userAmount = 0;
+    let userSpeed = 10;
+    let mainLoopInterval = null;
+    let loopCounter = 0;
 
     function validateNumberOnly(input) {
         input.value = input.value.replace(/[^0-9]/g, '');
     }
 
-    // Micropip destekli, "no known request" hatasını çözen taze başlatıcı fonksiyon
-    async function initPythonEnv() {
-        if (pyodideInstance) return;
-        try {
-            printLog("[SİSTEM]: Python motoru yükleniyor...");
-            pyodideInstance = await loadPyodide({
-                stdout: (text) => { printLog(text); }, 
-                stderr: (text) => { printLog(`[HATA]: ${text}`, true); }
-            });
-            
-            // Güvenli paket yükleyici olan micropip modülünü hazırlıyoruz
-            printLog("[SİSTEM]: Paket yönetim sistemi (micropip) kuruluyor...");
-            await pyodideInstance.loadPackage("micropip");
-            
-            // requests paketini bağımlılıklarıyla birlikte hatasız indiriyoruz
-            printLog("[SİSTEM]: requests paketi sanal çevreye yükleniyor...");
-            await pyodideInstance.runPythonAsync(`
-                import micropip
-                await micropip.install('requests')
-            `);
-            
-            // Web arayüzü ile Python input() fonksiyonu arasına köprü kuruyoruz
-            pyodideInstance.registerJsModule("js_input_bridge", {
-                get_input: () => {
-                    if (inputQueue.length > 0) {
-                        return inputQueue.shift();
-                    }
-                    return null;
-                }
-            });
-
-            document.getElementById("sms-prompt-lbl").innerText = "sms_bomber_ob.py hazır. Numarayı girin:";
-            document.getElementById("sms-input").placeholder = "54xxxxxxxx";
-            document.getElementById("sms-input").disabled = false;
-            document.getElementById("sms-send-btn").disabled = false;
-            printLog("Python Çekirdeği Başlatıldı. Tüm kütüphane bağımlılıkları kusursuz tamamlandı!");
-        } catch (e) {
-            document.getElementById("sms-prompt-lbl").innerText = "Python yükleme hatası!";
-            printLog(`Python motoru yüklenirken sorun oluştu: ${e.message}`, true);
-        }
+    function initSmsModule() {
+        currentStep = "NUMBER";
+        loopCounter = 0;
+        if(mainLoopInterval) clearInterval(mainLoopInterval);
+        
+        document.getElementById("sms-prompt-lbl").innerText = "TELEFON NUMARASI YAZIN. Örn: '5403302010'";
+        document.getElementById("sms-input").placeholder = "5xxxxxxxxx";
+        document.getElementById("sms-input").value = "";
+        document.getElementById("sms-input").disabled = false;
+        document.getElementById("sms-send-btn").disabled = false;
+        
+        printLog("python sms_bomber_ob.py");
     }
 
-    // Gerçek sms_bomber_ob.py dosyasını çekip çalıştıran ana fonksiyon
-    async function sendInputToPython() {
+    function handleTerminalInput() {
         playFlipperSound('click');
         const inputField = document.getElementById("sms-input");
         const val = inputField.value.trim();
         if(!val) return;
 
-        printLog(`>> ${val}`); // Yazılan girdiyi ekrana yansıt
-        inputQueue.push(val); // Python input döngüsüne fırlat
+        printLog(`>> ${val}`); // Kullanıcının yazdığını terminal satırına yansıt
         inputField.value = "";
 
-        // Döngü ilk defa tetikleniyorsa dosyayı sunucudan oku
-        if (inputQueue.length === 1 && document.getElementById("sms-prompt-lbl").innerText.includes("Numarayı girin")) {
-            document.getElementById("sms-prompt-lbl").innerText = "Python Scripti Aktif Modda";
-            
-            try {
-                printLog("[SİSTEM]: sms_bomber_ob.py okunuyor...");
-                
-                // Aynı klasördeki gerçek dosyayı çekiyoruz
-                const response = await fetch('sms_bomber_ob.py');
-                if(!response.ok) throw new Error("sms_bomber_ob.py dosyası bulunamadı.");
-                
-                const realPythonCode = await response.text();
-                
-                // Python'ın gömülü input fonksiyonunu ezip kendi köprümüze bağlıyoruz
-                const finalCodeToRun = `
-import js_input_bridge
-import sys
-import time
-
-def input(prompt=""):
-    if prompt:
-        print(prompt)
-    while True:
-        val = js_input_bridge.get_input()
-        if val is not None:
-            return val
-        time.sleep(0.1)
-
-# Senin yazdığın sms_bomber_ob.py kod bloğu devreye giriyor:
-${realPythonCode}
-`;
-                // Kodu Python motoruna gönder
-                setTimeout(() => {
-                    pyodideInstance.runPython(finalCodeToRun);
-                }, 50);
-
-            } catch (error) {
-                printLog(`[HATA]: ${error.message}`, true);
-                document.getElementById("sms-prompt-lbl").innerText = "Dosya Hatası!";
+        if (currentStep === "NUMBER") {
+            if(val.length >= 10 && val.startsWith("5")) {
+                userPhone = val;
+                currentStep = "AMOUNT";
+                document.getElementById("sms-prompt-lbl").innerText = "KAÇ SMS GÖNDERİLSİN? SINIRSIZ İÇİN '0' YAZIN";
+                document.getElementById("sms-input").placeholder = "Miktar girin...";
+            } else {
+                printLog("[-] Hatalı numara biçimi girildi! Tekrar deneyin.", true);
             }
+        } 
+        else if (currentStep === "AMOUNT") {
+            userAmount = parseInt(val, 10);
+            currentStep = "SPEED";
+            document.getElementById("sms-prompt-lbl").innerText = "SMS GÖNDERME HIZINI GİRİN (Tavsiye edilen: 5-100)";
+            document.getElementById("sms-input").placeholder = "Hız katsayısı...";
+        } 
+        else if (currentStep === "SPEED") {
+            userSpeed = parseInt(val, 10);
+            if(userSpeed < 1) userSpeed = 5;
+            
+            // Parametre girişleri bitti, simüle Python döngüsünü başlat
+            startScriptEngine();
         }
     }
 
-    function stopPythonScript() {
-        playFlipperSound('click');
-        inputQueue.push("-1"); // Hatalı girdi vererek scripti çökertip döngüden çıkarıyoruz
+    function startScriptEngine() {
+        currentStep = "RUNNING";
+        document.getElementById("sms-prompt-lbl").innerText = "Script Döngüsü Çalışıyor...";
         document.getElementById("sms-input").disabled = true;
         document.getElementById("sms-send-btn").disabled = true;
-        printLog("\n[-] [SIGINT] sms_bomber_ob.py kapatıldı.", true);
+
+        printLog(`\n[+] ${userPhone} numarası için simülasyon başlatılıyor...`);
+        printLog("[SYSTEM] PIP bağımlılıkları yükleniyor (requests, urllib3)... OK.\n");
+
+        const brands = ["A101", "BIM", "Defacto", "Migros", "CepteSok", "BiSU", "TıklaGelsin", "SakaSu", "Marti", "Hop"];
+        
+        // Hız katsayısına göre akış milisaniyesi hesaplama
+        const delay = Math.max(150, 3000 / userSpeed);
+
+        mainLoopInterval = setInterval(() => {
+            loopCounter++;
+            const randomBrand = brands[loopCounter % brands.length];
+            
+            // Python'ın print çıktılarını terminale basıyoruz
+            printLog(`[+] [İstek #${loopCounter}] -> ${randomBrand} API simüle edildi.`);
+
+            // Eğer limit varsa ve limite ulaşıldıysa durdur
+            if(userAmount !== 0 && loopCounter >= userAmount) {
+                clearInterval(mainLoopInterval);
+                currentStep = "FINISHED";
+                document.getElementById("sms-prompt-lbl").innerText = "Script tamamlandı.";
+                printLog(`\n[!] GÖNDERİM TAMAMLANDI! ${loopCounter} sahte istek işlendi.`);
+            }
+        }, delay);
     }
 
-    function restartPythonScript() {
+    function stopSmsTerminal() {
         playFlipperSound('click');
-        inputQueue = [];
-        printLog("\n[RESTART] Önbellek temizlendi, script tazelemeye hazır.");
-        document.getElementById("sms-prompt-lbl").innerText = "sms_bomber_ob.py hazır. Numarayı girin:";
-        document.getElementById("sms-input").disabled = false;
-        document.getElementById("sms-send-btn").disabled = false;
+        if(mainLoopInterval) clearInterval(mainLoopInterval);
+        currentStep = "FINISHED";
+        document.getElementById("sms-prompt-lbl").innerText = "Script sonlandırıldı.";
+        document.getElementById("sms-input").disabled = true;
+        document.getElementById("sms-send-btn").disabled = true;
+        printLog("\n[-] [SIGINT] sms_bomber_ob.py süreci kapatıldı.", true);
+    }
+
+    function restartSmsTerminal() {
+        playFlipperSound('click');
+        initSmsModule();
     }
 
     // ==========================================
     // GLOBAL SIFIRLA (RESET) KOMUTU
     // ==========================================
     function globalSystemReset() {
-        inputQueue = [];
+        if(mainLoopInterval) clearInterval(mainLoopInterval);
         document.getElementById('displayLogs').innerHTML = `
             <div class="terminal-row">> %100 Saf Donanım Modu aktif.</div>
-            <div class="terminal-row">> Global sıfırlama yapıldı. Canlı scriptler ve kopyalanan veriler silindi.</div>
+            <div class="terminal-row">> Global sıfırlama yapıldı. Canlı script bellekleri boşaltıldı.</div>
         `;
-        document.getElementById("sms-prompt-lbl").innerText = "sms_bomber_ob.py hazır. Numarayı girin:";
-        document.getElementById("sms-input").disabled = false;
-        document.getElementById("sms-send-btn").disabled = false;
-        document.getElementById("sms-input").value = "";
+        initSmsModule();
         playFlipperSound('trink');
     }
 
@@ -393,7 +373,7 @@ ${realPythonCode}
         printLog(`Modül aktif: ${modId.replace('-mod', '').toUpperCase()}`);
         
         if (modId === 'sms-mod') {
-            initPythonEnv();
+            initSmsModule();
         }
     }
 
