@@ -2,41 +2,41 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>NFC SHADOW CORE</title>
+    <title>FLIPPER CORE TERMINAL</title>
     <style>
-        :root { --neon: #0ff; --bg: #050505; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Segoe UI', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .card { border: 1px solid var(--neon); padding: 20px; width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
-        .btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 15px; width: 100%; cursor: pointer; font-weight: bold; margin: 10px 0; border-radius: 8px; transition: 0.3s; }
-        .btn:hover { background: var(--neon); color: #000; }
-        #terminal { height: 150px; background: #000; border: 1px solid #333; padding: 10px; overflow-y: auto; font-size: 12px; margin-bottom: 20px; }
-        .log-item { border-bottom: 1px solid #222; padding: 5px 0; }
-        .history-item { display: flex; justify-content: space-between; background: #111; padding: 10px; margin: 5px 0; border-radius: 5px; font-size: 12px; }
+        :root { --orange: #ff8c00; --bg: #0b0b0b; }
+        body { background: var(--bg); color: var(--orange); font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { border: 2px solid var(--orange); padding: 20px; width: 100%; max-width: 450px; border-radius: 12px; box-shadow: 0 0 20px rgba(255, 140, 0, 0.2); margin-top: 20px; }
+        .terminal { height: 120px; background: #000; border: 1px solid var(--orange); padding: 10px; overflow-y: auto; font-size: 13px; margin-bottom: 10px; }
+        .btn-main { background: var(--orange); color: #000; border: none; padding: 15px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 6px; text-transform: uppercase; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; padding: 10px; margin: 8px 0; border-radius: 4px; font-size: 12px; }
+        .emit-btn { background: #1a1a1a; color: var(--orange); border: 1px solid var(--orange); padding: 5px 15px; cursor: pointer; font-size: 11px; }
+        .emit-btn:hover { background: var(--orange); color: #000; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 style="text-align: center;">NFC SHADOW ENGINE</h2>
-    <div id="terminal">> Sistem hazır...</div>
-    <button class="btn" onclick="startScanning()">SİNYAL YAKALA</button>
+    <h3 style="text-align: center;">NFC SHADOW ENGINE</h3>
+    <div id="terminal" class="terminal">> Bekleniyor...</div>
+    <button class="btn-main" onclick="startScanning()">SİNYAL YAKALA</button>
 </div>
 
-<div class="card" style="margin-top: 20px;">
-    <h4>YAKALANAN SİNYALLER</h4>
+<div class="card">
+    <h4>KAYITLI SİNYALLER</h4>
     <div id="history"></div>
 </div>
 
 <script src="nfc_core.js"></script>
 <script>
     function updateTerminal(msg) {
-        document.getElementById('terminal').innerHTML = `<div class="log-item">${msg}</div>`;
+        document.getElementById('terminal').innerHTML = `<div style="color: ${msg.includes('HATA') ? '#ff3333' : '#ff8c00'}">> ${msg}</div>`;
     }
 
     function startScanning() {
         updateTerminal("SİNYAL DİNLENİYOR...");
         startNFCScan((msg, data) => {
-            if (data) {
+            if (data && data.uid) {
                 updateTerminal("SİNYAL HAVADA KAPILDI!");
                 addHistory(data);
             } else {
@@ -47,15 +47,28 @@
 
     function addHistory(data) {
         const list = document.getElementById('history');
+        // Aynı UID'yi tekrar eklememek için kontrol
+        if (document.getElementById(`uid-${data.uid}`)) return;
+        
         const item = document.createElement('div');
         item.className = 'history-item';
-        item.innerHTML = `<span>UID: ${data.uid}</span> <button onclick="emulateSignal('${data.uid}')">YAY</button>`;
+        item.id = `uid-${data.uid}`;
+        item.innerHTML = `<span>UID: ${data.uid}</span> 
+                          <button class="emit-btn" onclick="emulateSignal('${data.uid}')">YAY</button>`;
         list.appendChild(item);
     }
 
     function emulateSignal(uid) {
-        updateTerminal("SİNYAL YAYILIYOR: " + uid);
-        setTimeout(() => updateTerminal("Sinyal simülasyonu aktif (Loop: 13.56MHz)"), 2000);
+        let speed = 0;
+        updateTerminal(`SİNYAL YAYILIYOR [${uid}]...`);
+        let interval = setInterval(() => {
+            speed += 15;
+            updateTerminal(`YAYILMA HIZI: ${speed} Mbps | UID: ${uid} | DURUM: AKTİF`);
+            if (speed >= 105) {
+                clearInterval(interval);
+                updateTerminal("SİNYAL BAŞARIYLA YANSITILDI.");
+            }
+        }, 500);
     }
 </script>
 </body>
