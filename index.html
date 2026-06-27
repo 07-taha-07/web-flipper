@@ -52,7 +52,7 @@
             line-height: 1.4;
         }
 
-        /* DİNAMİK VE AYARLANABİLİR ANAHTAR DECODER ALANI (VİDEODAKİ SİSTEM) */
+        /* ANAHTAR DECODER ALANI */
         .decoder-wrapper {
             border: 1px dashed #ff8c00;
             padding: 10px;
@@ -87,7 +87,7 @@
             margin: 15px auto;
             padding-bottom: 5px;
             width: 100%;
-            transition: transform 0.2s; /* Büyütme küçültme için */
+            transition: transform 0.2s;
             transform-origin: bottom center;
         }
         .key-pin-box {
@@ -115,7 +115,7 @@
             font-size: 11px;
             font-weight: bold;
             margin: 4px 0;
-            height: 15px; /* JS ile dinamik değişecek */
+            height: 15px;
         }
 
         /* İŞLETİM SİSTEMİ SEKMELERİ */
@@ -193,8 +193,8 @@
     <div class="flipper-screen" id="flipperScreen">
         <div class="screen-title">🐬 FLIPPER CENTRAL SYSTEM</div>
         <div id="displayLogs">
-            <div class="terminal-row">> Tüm donanım modülleri hazır durumda.</div>
-            <div class="terminal-row">> Tarama modunu seçin...</div>
+            <div class="terminal-row">> Çekirdek yazılım ve harici scriptler bağlandı.</div>
+            <div class="terminal-row">> Sistem aktif. Bir modül seçin...</div>
         </div>
     </div>
 
@@ -207,15 +207,59 @@
         <button class="menu-btn" onclick="changeModule('net-mod')">NETWORK</button>
     </div>
 
+    <div id="ir-mod" class="module-panel active">
+        <h4>📡 INFRARED TRANSMITTER</h4>
+        <label>Cihaz / Sinyal Veritabanı:</label>
+        <select id="ir-database">
+            <option value="Samsung">Samsung TV</option>
+            <option value="LG">LG Smart TV</option>
+            <option value="Sony">Sony Bravia</option>
+            <option value="Vestel">Vestel / Beko</option>
+            <option value="Klima">Universal Klima</option>
+        </select>
+        <div class="action-grid">
+            <button class="ctrl-btn alert" onclick="runIRSystem('POWER')">GÜÇ (IR)</button>
+            <button class="ctrl-btn" onclick="runIRSystem('MUTE')">SES KES</button>
+            <button class="ctrl-btn" onclick="runIRSystem('SRC')">KAYNAK</button>
+            <button class="ctrl-btn" onclick="runIRSystem('RX')">KODU KOPYALA</button>
+        </div>
+    </div>
+
+    <div id="sub-mod" class="module-panel">
+        <h4>📻 SUB-GHz RADIO</h4>
+        <label>Frekans Modülasyonu:</label>
+        <select id="sub-frequency">
+            <option value="433.92">433.92 MHz (Araba / Garaj)</option>
+            <option value="315.00">315.00 MHz (Bariyerler)</option>
+            <option value="868.35">868.35 MHz (Güvenlikli Kapılar)</option>
+        </select>
+        <div class="action-grid">
+            <button class="ctrl-btn" onclick="runSubGhz('RX')">SİNYAL YAKALA</button>
+            <button class="ctrl-btn alert" onclick="runSubGhz('TX')">SİNYAL YAY (TX)</button>
+        </div>
+    </div>
+
+    <div id="nfc-mod" class="module-panel">
+        <h4>💳 NFC & RFID EMULATOR</h4>
+        <label>Kart Protokolü:</label>
+        <select id="nfc-protocol">
+            <option value="Mifare">Mifare Classic 1K (Otobüs/Otel)</option>
+            <option value="RFID 125">RFID 125 kHz (Göstergeç)</option>
+            <option value="NTAG">NTAG21X (RFID Etiket)</option>
+        </select>
+        <div class="action-grid">
+            <button class="ctrl-btn" onclick="runNFCSys('SCAN')">KART OKU / KOPYALA</button>
+            <button class="ctrl-btn alert" onclick="runNFCSys('EMU')">KARTI YAYINLA</button>
+        </div>
+    </div>
+
     <div id="key-mod" class="module-panel">
         <h4>🔑 KEY DECODER (PRO)</h4>
-        
         <div class="scale-control-panel">
             <span style="font-size: 11px;">Çizelge Boyutu:</span>
             <button onclick="adjustScale(0.1)">BÜYÜT (+)</button>
             <button onclick="adjustScale(-0.1)">KÜÇÜLT (-)</button>
         </div>
-
         <div class="decoder-wrapper">
             <div class="key-decoder-visual" id="keyVisual">
                 <div class="key-pin-box">
@@ -250,55 +294,8 @@
                 </div>
             </div>
         </div>
-
         <div class="action-grid">
             <button class="ctrl-btn" style="grid-column: span 2;" onclick="getFinalKeyData()">AYARLANAN KODU SİSTEME KAYDET</button>
-        </div>
-    </div>
-
-    <div id="ir-mod" class="module-panel active">
-        <h4>📡 INFRARED TRANSMITTER</h4>
-        <label>Cihaz / Sinyal Veritabanı:</label>
-        <select id="ir-database">
-            <option value="Samsung">Samsung TV</option>
-            <option value="LG">LG Smart TV</option>
-            <option value="Sony">Sony Bravia</option>
-            <option value="Vestel">Vestel / Beko</option>
-            <option value="Klima">Universal Klima</option>
-        </select>
-        <div class="action-grid">
-            <button class="ctrl-btn alert" onclick="runAction('IR_TX_POWER', 'GÜÇ kapatma kodu kızılötesi ile iletildi.')">GÜÇ (IR)</button>
-            <button class="ctrl-btn" onclick="runAction('IR_TX_MUTE', 'SES KESME sinyali gönderildi.')">SES KES</button>
-            <button class="ctrl-btn" onclick="runAction('IR_TX_SRC', 'KAYNAK değiştirme sinyali fırlatıldı.')">KAYNAK</button>
-            <button class="ctrl-btn" onclick="runAction('IR_RX', 'Kızılötesi alıcı aktif. Kumandayı doğrultup basın...')">KODU KOPYALA</button>
-        </div>
-    </div>
-
-    <div id="sub-mod" class="module-panel">
-        <h4>📻 SUB-GHz RADIO</h4>
-        <label>Frekans Modülasyonu:</label>
-        <select id="sub-frequency">
-            <option value="433.92">433.92 MHz (Araba / Garaj)</option>
-            <option value="315.00">315.00 MHz (Bariyerler)</option>
-            <option value="868.35">868.35 MHz (Güvenlikli Kapılar)</option>
-        </select>
-        <div class="action-grid">
-            <button class="ctrl-btn" onclick="runAction('SUB_RX', 'Sinyal dinleniyor... Anahtara basın.')">SİNYAL YAKALA</button>
-            <button class="ctrl-btn alert" onclick="runAction('SUB_TX', 'Kopyalanan frekans kodu yayınlanıyor!')">SİNYAL YAY (TX)</button>
-        </div>
-    </div>
-
-    <div id="nfc-mod" class="module-panel">
-        <h4>💳 NFC & RFID EMULATOR</h4>
-        <label>Kart Protokolü:</label>
-        <select id="nfc-protocol">
-            <option value="Mifare">Mifare Classic 1K (Otobüs/Otel)</option>
-            <option value="RFID 125">RFID 125 kHz (Göstergeç)</option>
-            <option value="NTAG">NTAG21X (RFID Etiket)</option>
-        </select>
-        <div class="action-grid">
-            <button class="ctrl-btn" onclick="runAction('NFC_SCAN', 'NFC alanı aktif. Kartı yaklaştırın...')">KART OKU / KOPYALA</button>
-            <button class="ctrl-btn alert" onclick="runAction('NFC_EMU', 'Kart UID kodu simüle ediliyor...')">KARTI YAYINLA</button>
         </div>
     </div>
 
@@ -310,22 +307,25 @@
             <option value="LOCK">Hedef Bilgisayarı Kilitle</option>
             <option value="FAKE">Sahte Windows Çökme Ekranı Aç</option>
         </select>
-        <button class="ctrl-btn" style="width: 100%;" onclick="runAction('BAD_USB', 'DuckyScript derlendi ve panoya kopyalandı!')">PAYLOAD ÜRET</button>
+        <button class="ctrl-btn" style="width: 100%;" onclick="runBadUSBSys()">PAYLOAD ÜRET</button>
     </div>
 
     <div id="net-mod" class="module-panel">
         <h4>🌐 NETWORK ANALYZER</h4>
-        <label>Yerel Ağ Hedefi:</label>
+        <label>Yerel Ağ Hedefi / Modem IP:</label>
         <input type="text" id="target-ip" value="192.168.1.1">
         <div class="action-grid">
-            <button class="ctrl-btn" onclick="runAction('NET_PING', 'Paketler gönderiliyor...')">PING TEST</button>
-            <button class="ctrl-btn" onclick="runAction('NET_SCAN', 'Ağdaki aktif IP adresleri listeleniyor...')">AĞI TARA</button>
+            <button class="ctrl-btn" onclick="runNetworkSys('PING')">PING TEST</button>
+            <button class="ctrl-btn" onclick="runNetworkSys('SCAN')">AĞI TARA</button>
         </div>
     </div>
 </div>
 
+<script src="badusb_payloads.js"></script>
+<script src="nfc_core.js"></script>
+<script src="network_scanner.js"></script>
+
 <script>
-    // Global ölçek değişkeni (Çizelge boyutu için)
     let currentScale = 1.0;
 
     function changeModule(modId) {
@@ -335,13 +335,14 @@
         document.getElementById(modId).classList.add('active');
         event.currentTarget.classList.add('active');
         
-        printLog(`Modül aktif edildi: ${modId.replace('-mod', '').toUpperCase()}`);
+        printLog(`Modül değiştirildi: ${modId.replace('-mod', '').toUpperCase()}`);
     }
 
-    function printLog(text) {
+    function printLog(text, isError = false) {
         let container = document.getElementById('displayLogs');
         let row = document.createElement('div');
         row.className = 'terminal-row';
+        if(isError) row.style.color = '#ff3333';
         row.innerText = `> ${text}`;
         container.appendChild(row);
         
@@ -349,50 +350,84 @@
         screen.scrollTop = screen.scrollHeight;
     }
 
-    function runAction(type, msg) {
-        printLog(msg);
-        if(type === 'NFC_SCAN') {
-            setTimeout(() => printLog("Kart Algılandı! UID: 04:DE:7E:AA:B2:5C:80"), 1500);
-        }
-        if(type === 'SUB_RX') {
-            setTimeout(() => printLog("Frekans Yakalandı: [433.92 MHz] RAW Veri Kaydedildi."), 2000);
+    // --- ENTEGRASYON VE TETİKLEME MOTORLARI ---
+
+    // 1. Harici Bad USB Entegrasyonu
+    function runBadUSBSys() {
+        let type = document.getElementById('usb-payload').value;
+        printLog("Betik derleniyor...");
+        setTimeout(() => {
+            let scriptData = generateBadUsb(type);
+            printLog("DuckyScript üretildi ve panoya kopyalandı!");
+        }, 500);
+    }
+
+    // 2. Harici NFC Entegrasyonu
+    function runNFCSys(mode) {
+        let protocol = document.getElementById('nfc-protocol').value;
+        if(mode === 'SCAN') {
+            printLog(`${protocol} modül taraması başlatılıyor...`);
+            startNFCScan(printLog);
+        } else if(mode === 'EMU') {
+            emulateSavedNFC(printLog);
         }
     }
 
-    // --- ANAHTAR DECODER İNTERAKTİF MOTORU ---
-    
-    // Çizelgeyi büyütüp küçülten fonksiyon
+    // 3. Harici Network Entegrasyonu
+    function runNetworkSys(mode) {
+        let target = document.getElementById('target-ip').value;
+        if(mode === 'PING') {
+            printLog(`${target} adresine ping paketi atılıyor...`);
+            executePing(target, printLog);
+        } else if(mode === 'SCAN') {
+            let baseIP = target.substring(0, target.lastIndexOf('.'));
+            scanLocalNetwork(baseIP, printLog);
+        }
+    }
+
+    // 4. Infrared Sistemi tetikleyicisi (Geliştirmeye açık)
+    function runIRSystem(action) {
+        let brand = document.getElementById('ir-database').value;
+        if(action === 'POWER') printLog(`${brand} için kızılötesi kapatma (HEX) fırlatıldı.`);
+        if(action === 'MUTE') printLog(`${brand} ses kesme komutu iletildi.`);
+        if(action === 'SRC') printLog(`${brand} kaynak seçimi tetiklendi.`);
+        if(action === 'RX') printLog("Kızılötesi gözü aktiflendi. Sinyal bekleniyor...");
+    }
+
+    // 5. Sub-Ghz Tetikleyicisi
+    function runSubGhz(action) {
+        let freq = document.getElementById('sub-frequency').value;
+        if(action === 'RX') printLog(`${freq} MHz bandı dinleniyor... Sinyal aranıyor...`);
+        if(action === 'TX') printLog(`${freq} MHz üzerinden kayıtlı ham veri (RAW) havaya fırlatılıyor!`);
+    }
+
+    // --- KEY DECODER FONKSİYONLARI ---
     function adjustScale(amount) {
         currentScale += amount;
-        if(currentScale < 0.5) currentScale = 0.5; // Çok küçülmesin
-        if(currentScale > 2.0) currentScale = 2.0; // Çok büyümesin
+        if(currentScale < 0.5) currentScale = 0.5;
+        if(currentScale > 2.0) currentScale = 2.0;
         document.getElementById('keyVisual').style.transform = `scale(${currentScale})`;
-        printLog(`Ölçek Oranı Değiştirildi: %${Math.round(currentScale * 100)}`);
+        printLog(`Ölçek Oranı: %${Math.round(currentScale * 100)}`);
     }
 
-    // Dişleri aşağı yukarı elle hareket ettiren fonksiyon
     function adjPin(pinNum, direction) {
         let pin = document.getElementById(`pin${pinNum}`);
         let currentVal = parseInt(pin.getAttribute('data-val'));
-        
         currentVal += direction;
-        if(currentVal < 0) currentVal = 0; // Sınır
-        if(currentVal > 9) currentVal = 9; // Sınır
+        if(currentVal < 0) currentVal = 0;
+        if(currentVal > 9) currentVal = 9;
         
         pin.setAttribute('data-val', currentVal);
         pin.innerText = currentVal;
-        
-        // Yüksekliği değere göre değiştiriyoruz (0 en kısa, 9 en uzun)
         pin.style.height = `${15 + (currentVal * 4)}px`;
     }
 
-    // Elle girilen nihai kodu sisteme basan buton fonksiyonu
     function getFinalKeyData() {
         let finalCode = [];
         for(let i = 1; i <= 6; i++) {
             finalCode.push(document.getElementById(`pin${i}`).getAttribute('data-val'));
         }
-        printLog(`Manuel Anahtar Kodu Kaydedildi: ${finalCode.join(' ')} (SC4)`);
+        printLog(`Anahtar Profili Belleğe Kaydedildi: ${finalCode.join(' ')}`);
     }
 </script>
 
