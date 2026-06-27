@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FLIPPER REAL TOOLKIT</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
     <style>
         body {
             background-color: #0b0b0b;
@@ -78,7 +79,7 @@
             white-space: pre-wrap;
         }
 
-        /* İŞLETİM SİSTEMİ SEKMELERİ */
+        /* OS MENU SEKMELERİ */
         .os-menu {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -141,9 +142,9 @@
             text-transform: uppercase;
             margin-top: 5px;
         }
-        button.ctrl-btn:active { background-color: #cc7000; }
+        button.ctrl-btn:disabled { background-color: #555; color: #888; cursor: not-allowed; }
         
-        /* SMS Modülü Ekstra Buton Tasarımları */
+        /* SMS PANEL BUTONLARI */
         .sms-btn-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -165,11 +166,9 @@
 </head>
 <body>
 
-<!-- GLOBAL RESET BUTTON -->
 <button id="global-reset-btn" onclick="globalSystemReset()">⚠️ SIFIRLA</button>
 
 <div class="flipper-device">
-    <!-- MAIN FLIPPER TERMINAL SCREEN -->
     <div class="flipper-screen" id="flipperScreen">
         <div class="screen-title">🐬 FLIPPER REAL-OS v7.0</div>
         <div id="displayLogs">
@@ -178,7 +177,6 @@
         </div>
     </div>
 
-    <!-- MODÜL SEÇİM MENÜSÜ -->
     <div class="os-menu">
         <button class="menu-btn active" onclick="changeModule('nfc-mod')">💳 NFC SCAN</button>
         <button class="menu-btn" onclick="changeModule('usb-mod')">⌨️ BAD USB</button>
@@ -186,13 +184,11 @@
         <button class="menu-btn" onclick="changeModule('sms-mod')">⚡ SMS BOMBER</button>
     </div>
 
-    <!-- 1. REAL NFC -->
     <div id="nfc-mod" class="module-panel active">
         <h4>💳 HARDWARE NFC SCANNER</h4>
         <button class="ctrl-btn" onclick="runNFCSys()">KARTI OKUMAYA BAŞLA</button>
     </div>
 
-    <!-- 2. REAL BAD USB -->
     <div id="usb-mod" class="module-panel">
         <h4>⌨️ BAD USB GENERATOR</h4>
         <select id="usb-payload">
@@ -203,164 +199,160 @@
         <button class="ctrl-btn" onclick="runBedUSBSys()">PAYLOAD ÜRET VE KOPYALA</button>
     </div>
 
-    <!-- 3. REAL PING -->
     <div id="net-mod" class="module-panel">
         <h4>🌐 NETWORK ICMP PING</h4>
         <input type="text" id="target-ip" value="192.168.1.1">
         <button class="ctrl-btn" onclick="runNetworkSys()">CANLI PİNG GÖNDER</button>
     </div>
 
-    <!-- 4. REAL SMS BOMBER (SİMÜLASYON SCRIPT MOTORU) -->
     <div id="sms-mod" class="module-panel">
-        <h4>⚡ SMS_BOMBER.PY TERMINAL</h4>
-        <label id="sms-prompt-lbl">Telefon Numarası Girin:</label>
-        <input type="text" id="sms-input" placeholder="Örn: 5403302010" oninput="validateNumberOnly(this)">
+        <h4>⚡ sms_bomber_ob.py ENGINE</h4>
+        <label id="sms-prompt-lbl">Python ortamı yükleniyor...</label>
+        <input type="text" id="sms-input" placeholder="Yükleniyor..." disabled oninput="validateNumberOnly(this)">
         
-        <button class="ctrl-btn" id="sms-send-btn" onclick="submitSmsInput()">VERİYİ GÖNDER</button>
+        <button class="ctrl-btn" id="sms-send-btn" disabled onclick="sendInputToPython()">VERİYİ GÖNDER</button>
         
         <div class="sms-btn-grid">
-            <button class="sms-sub-btn" id="sms-restart-btn" onclick="restartSmsScript()">🔄 YENİDEN BAŞLAT</button>
-            <button class="sms-sub-btn" id="sms-stop-btn" onclick="stopSmsScript()">🛑 SONLANDIR</button>
+            <button class="sms-sub-btn" id="sms-restart-btn" onclick="restartPythonScript()">🔄 YENİDEN BAŞLAT</button>
+            <button class="sms-sub-btn" id="sms-stop-btn" onclick="stopPythonScript()">🛑 SONLANDIR</button>
         </div>
     </div>
 </div>
 
-<!-- SÜRÜCÜ BAĞLANTILARI -->
 <script src="badusb_payloads.js"></script>
 <script src="nfc_core.js"></script>
 <script src="network_scanner.js"></script>
 
 <script>
     // ==========================================
-    // SMS_BOMBER.PY CORE MANTIKSAL DÖNGÜSÜ (JS)
+    // CANLI WEB-PYTHON MOTORU AYARLARI (PYODIDE)
     // ==========================================
-    let smsState = "NUMBER"; // NUMBER, AMOUNT, SPEED, RUNNING, STOPPED
-    let targetNum = "";
-    let smsAmount = 0;
-    let smsSpeed = 10;
-    let smsInterval = null;
-    let sentCount = 0;
+    let pyodideInstance = null;
+    let inputQueue = []; // Python'ın input() çağrılarını besleyen veri kuyruğu
 
-    // Sadece sayı girilmesini sağlayan filtre
     function validateNumberOnly(input) {
         input.value = input.value.replace(/[^0-9]/g, '');
     }
 
-    function initSmsInterface() {
-        smsState = "NUMBER";
-        document.getElementById("sms-prompt-lbl").innerText = 'Telefon Numarası Yazın (Örn: 5403302010):';
-        document.getElementById("sms-input").placeholder = "54xxxxxxxx";
-        document.getElementById("sms-input").value = "";
+    // Python Ortamını başlatan fonksiyon
+    async function initPythonEnv() {
+        if (pyodideInstance) return;
+        try {
+            pyodideInstance = await loadPyodide({
+                stdout: (text) => { printLog(text); }, // Python print() komutları ekrana akar
+                stderr: (text) => { printLog(`[HATA]: ${text}`, true); }
+            });
+            
+            // Web arayüzü ile Python input() fonksiyonu arasına köprü kuruyoruz
+            pyodideInstance.registerJsModule("js_input_bridge", {
+                get_input: () => {
+                    if (inputQueue.length > 0) {
+                        return inputQueue.shift();
+                    }
+                    return null;
+                }
+            });
+
+            document.getElementById("sms-prompt-lbl").innerText = "sms_bomber_ob.py hazır. Numarayı girin:";
+            document.getElementById("sms-input").placeholder = "54xxxxxxxx";
+            document.getElementById("sms-input").disabled = false;
+            document.getElementById("sms-send-btn").disabled = false;
+            printLog("Python Çekirdeği Başlatıldı. Önbellek pipleri kontrol edildi: OK.");
+        } catch (e) {
+            document.getElementById("sms-prompt-lbl").innerText = "Python yükleme hatası!";
+            printLog("Python motoru yüklenirken bir sorun oluştu.", true);
+        }
+    }
+
+    // Gerçek sms_bomber_ob.py dosyasını çekip çalıştıran ana fonksiyon
+    async function sendInputToPython() {
+        playFlipperSound('click');
+        const inputField = document.getElementById("sms-input");
+        const val = inputField.value.trim();
+        if(!val) return;
+
+        printLog(`>> ${val}`); // Yazılan girdiyi ekrana yansıt
+        inputQueue.push(val); // Python input döngüsüne fırlat
+        inputField.value = "";
+
+        // Döngü ilk defa tetikleniyorsa dosyayı sunucudan oku
+        if (inputQueue.length === 1 && document.getElementById("sms-prompt-lbl").innerText.includes("Numarayı girin")) {
+            document.getElementById("sms-prompt-lbl").innerText = "Python Scripti Aktif Modda";
+            
+            try {
+                printLog("[SİSTEM]: sms_bomber_ob.py okunuyor...");
+                
+                // Aynı klasördeki gerçek dosyayı çekiyoruz
+                const response = await fetch('sms_bomber_ob.py');
+                if(!response.ok) throw new Error("sms_bomber_ob.py dosyası bulunamadı.");
+                
+                const realPythonCode = await response.text();
+                
+                // Python'ın gömülü input fonksiyonunu ezip kendi köprümüze bağlıyoruz
+                const finalCodeToRun = `
+import js_input_bridge
+import sys
+import time
+
+def input(prompt=""):
+    if prompt:
+        print(prompt)
+    while True:
+        val = js_input_bridge.get_input()
+        if val is not None:
+            return val
+        time.sleep(0.1)
+
+# Senin yazdığın sms_bomber_ob.py kod bloğu devreye giriyor:
+${realPythonCode}
+`;
+                // Kodu Python motoruna gönder
+                setTimeout(() => {
+                    pyodideInstance.runPython(finalCodeToRun);
+                }, 50);
+
+            } catch (error) {
+                printLog(`[HATA]: ${error.message}`, true);
+                document.getElementById("sms-prompt-lbl").innerText = "Dosya Hatası!";
+            }
+        }
+    }
+
+    function stopPythonScript() {
+        playFlipperSound('click');
+        inputQueue.push("-1"); // Hatalı girdi vererek scripti çökertip döngüden çıkarıyoruz
+        document.getElementById("sms-input").disabled = true;
+        document.getElementById("sms-send-btn").disabled = true;
+        printLog("\n[-] [SIGINT] sms_bomber_ob.py kapatıldı.", true);
+    }
+
+    function restartPythonScript() {
+        playFlipperSound('click');
+        inputQueue = [];
+        printLog("\n[RESTART] Önbellek temizlendi, script tazelemeye hazır.");
+        document.getElementById("sms-prompt-lbl").innerText = "sms_bomber_ob.py hazır. Numarayı girin:";
         document.getElementById("sms-input").disabled = false;
         document.getElementById("sms-send-btn").disabled = false;
     }
 
-    function submitSmsInput() {
-        playFlipperSound('click');
-        const inputVal = document.getElementById("sms-input").value.trim();
-        if(!inputVal) return;
-
-        document.getElementById("sms-input").value = "";
-
-        if (smsState === "NUMBER") {
-            if(inputVal.length >= 10) {
-                targetNum = inputVal;
-                printLog(`[?] Telefon Numarası: ${targetNum}`);
-                smsState = "AMOUNT";
-                document.getElementById("sms-prompt-lbl").innerText = 'Kaç SMS Gönderilsin? (Sonsuz için 0):';
-                document.getElementById("sms-input").placeholder = "Adet girin veya 0 yazın";
-            } else {
-                printLog("HATA: Eksik veya hatalı numara girdiniz!", true);
-            }
-        } 
-        else if (smsState === "AMOUNT") {
-            smsAmount = parseInt(inputVal, 10);
-            printLog(`[?] Gönderim Adedi: ${smsAmount === 0 ? "Sonsuz (0)" : smsAmount}`);
-            smsState = "SPEED";
-            document.getElementById("sms-prompt-lbl").innerText = 'Gönderim Hızını Girin (Tavsiye: 5-100):';
-            document.getElementById("sms-input").placeholder = "Hız katsayısı girin";
-        } 
-        else if (smsState === "SPEED") {
-            smsSpeed = parseInt(inputVal, 10);
-            if(smsSpeed < 1) smsSpeed = 5;
-            printLog(`[?] Gönderim Hızı: ${smsSpeed}`);
-            
-            // Simülasyonu ateşle
-            startSmsLoop();
-        }
-    }
-
-    function startSmsLoop() {
-        smsState = "RUNNING";
-        document.getElementById("sms-prompt-lbl").innerText = 'SCRIPT ÇALIŞIYOR (sms_bomber.py)...';
-        document.getElementById("sms-input").disabled = true;
-        document.getElementById("sms-send-btn").disabled = true;
-
-        printLog(`\n--- [sms_bomber.py BAŞLATILDI] ---`);
-        printLog(`[SYSTEM] Bağımlı PIP paketleri indiriliyor: requests, urllib3... Tamamlandı.`);
-        printLog(`[+] ${targetNum} numarasına istek kanalları açılıyor...\n`);
-
-        const listBrand = ["A101", "BIM", "Defacto", "Migros", "CepteSok", "BiSU", "TıklaGelsin", "SakaSu", "Marti", "Hop"];
-        sentCount = 0;
-        
-        // Hıza göre döngü süresi hesabı (milisaniye)
-        const msInterval = Math.max(150, 3000 / smsSpeed);
-
-        smsInterval = setInterval(() => {
-            sentCount++;
-            const randomBrand = listBrand[Math.floor(Math.random() * listBrand.length)];
-            
-            printLog(`[+] [İstek #${sentCount}] -> ${randomBrand} API üzerinden döküm iletildi.`);
-
-            if(smsAmount !== 0 && sentCount >= smsAmount) {
-                stopSmsScript();
-                printLog(`\n[!] GÖNDERİM TAMAMLANDI! Toplam ${sentCount} paket işlendi.`, false);
-            }
-        }, msInterval);
-    }
-
-    function stopSmsScript() {
-        playFlipperSound('click');
-        if(smsInterval) clearInterval(smsInterval);
-        smsState = "STOPPED";
-        document.getElementById("sms-prompt-lbl").innerText = 'Script durduruldu.';
-        document.getElementById("sms-input").disabled = true;
-        document.getElementById("sms-send-btn").disabled = true;
-        printLog(`\n[-] [KULLANICI DURDURDU] Script çıkış kodu ile sonlandırıldı.`, true);
-    }
-
-    function restartSmsScript() {
-        playFlipperSound('click');
-        if(smsInterval) clearInterval(smsInterval);
-        printLog(`\n[RESTART] Geçici önbellek temizlendi, script yeniden kuruluyor...`);
-        initSmsInterface();
-    }
-
     // ==========================================
-    // GLOBAL RESET (SIFIRLA) FONKSİYONU
+    // GLOBAL SIFIRLA (RESET) KOMUTU
     // ==========================================
     function globalSystemReset() {
-        // 1. Çalışan tüm interval/script süreçlerini durdur
-        if(smsInterval) clearInterval(smsInterval);
-        
-        // 2. Ekranı/Terminali ilk günkü haline döndür
+        inputQueue = [];
         document.getElementById('displayLogs').innerHTML = `
             <div class="terminal-row">> %100 Saf Donanım Modu aktif.</div>
-            <div class="terminal-row">> Global sıfırlama yapıldı. Bellek uçuruldu.</div>
+            <div class="terminal-row">> Global sıfırlama yapıldı. Canlı scriptler ve kopyalanan veriler silindi.</div>
         `;
-        
-        // 3. SMS durumunu fabrika ayarlarına çek
-        initSmsInterface();
-
-        // 4. NFC ve diğer tampon bellekleri temizle (Varsa kopyalanan listeleri sıfırla)
-        if(typeof savedNFCCards !== 'undefined') savedNFCCards = []; 
-        
-        // Küçük bir uyarı tınısı çal
+        document.getElementById("sms-prompt-lbl").innerText = "sms_bomber_ob.py hazır. Numarayı girin:";
+        document.getElementById("sms-input").disabled = false;
+        document.getElementById("sms-send-btn").disabled = false;
+        document.getElementById("sms-input").value = "";
         playFlipperSound('trink');
     }
 
     // ==========================================
-    // FLIPPER SOUND ENGINE & SİSTEM KLASİKLERİ
+    // SİRER DOSTU SES MOTORU VE SEKME YÖNETİMİ
     // ==========================================
     function playFlipperSound(type) {
         try {
@@ -370,11 +362,6 @@
                 osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'square';
                 osc.frequency.setValueAtTime(850, audioCtx.currentTime); gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.02); 
-            } else if (type === 'success') {
-                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'square';
-                osc.frequency.setValueAtTime(1300, audioCtx.currentTime); gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.08);
             } else if (type === 'trink') {
                 const now = audioCtx.currentTime;
                 const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
@@ -393,9 +380,8 @@
         event.currentTarget.classList.add('active');
         printLog(`Modül aktif: ${modId.replace('-mod', '').toUpperCase()}`);
         
-        // SMS modülüne girildiyse girdileri taze tut
-        if(modId === 'sms-mod') {
-            initSmsInterface();
+        if (modId === 'sms-mod') {
+            initPythonEnv();
         }
     }
 
@@ -414,7 +400,7 @@
     function runBedUSBSys() {
         playFlipperSound('click');
         let type = document.getElementById('usb-payload').value;
-        if(typeof generateBadUsb === "function") { generateBadUsb(type); playFlipperSound('success'); }
+        if(typeof generateBadUsb === "function") { generateBadUsb(type); }
     }
     function runNetworkSys() { playFlipperSound('click'); let target = document.getElementById('target-ip').value; if(typeof executePing === "function") executePing(target, printLog); }
 </script>
