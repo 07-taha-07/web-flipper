@@ -115,16 +115,54 @@
             margin-top: 5px;
         }
         button.ctrl-btn:active { background-color: #cc7000; }
+
+        /* ÖZEL KARE METADATA GÖRSEL SEÇİM ALANI */
+        .image-drop-zone {
+            width: 130px;
+            height: 130px;
+            border: 2px dashed #ff8c00;
+            border-radius: 12px;
+            margin: 15px auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background-color: #111;
+            overflow: hidden;
+            position: relative;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .image-drop-zone:hover {
+            background-color: #1a1a1a;
+            border-color: #ffaa00;
+        }
+        .image-drop-zone span {
+            font-size: 11px;
+            color: #ff8c00;
+            text-align: center;
+            padding: 5px;
+            pointer-events: none;
+        }
+        .image-drop-zone img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="flipper-device">
     <div class="flipper-screen" id="flipperScreen">
-        <div class="screen-title">🐬 FLIPPER REAL-OS v3.0</div>
+        <div class="screen-title">🐬 FLIPPER REAL-OS v4.0</div>
         <div id="displayLogs">
-            <div class="terminal-row">> %100 Gerçek donanım modülleri aktif.</div>
-            <div class="terminal-row">> Audio Synth (Buzzer) sürücüsü yüklendi.</div>
+            <div class="terminal-row">> %100 Saf Donanım Modu aktif.</div>
+            <div class="terminal-row">> Derin OSINT ve Turnike ses sürücüleri hazır.</div>
         </div>
     </div>
 
@@ -159,10 +197,17 @@
     </div>
 
     <div id="meta-mod" class="module-panel">
-        <h4>📁 IMAGE METADATA (EXIF)</h4>
-        <label>Analiz Edilecek Fotoğrafı Seçin:</label>
-        <input type="file" id="meta-file" accept="image/*" style="padding: 5px;">
-        <button class="ctrl-btn" onclick="runMetadataSys()">METADATAYI AYIKLA</button>
+        <h4>📁 OSINT IMAGE DECODER</h4>
+        <label style="text-align: center;">Fotoğraf Seçmek İçin Kareye Dokunun:</label>
+        
+        <input type="file" id="meta-file" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+        
+        <div class="image-drop-zone" onclick="document.getElementById('meta-file').click()">
+            <span id="upload-text">➕<br><br>GALERİDEN SEÇ</span>
+            <img id="preview-img" alt="Önizleme">
+        </div>
+
+        <button class="ctrl-btn" onclick="runMetadataSys()">METADATAYI DERİN TARAMA YAP</button>
     </div>
 </div>
 
@@ -172,32 +217,83 @@
 <script src="metadata_analyzer.js"></script>
 
 <script>
-    // Gerçek Ses Frekansı Üretici (Web Audio API Buzzer)
+    // Gelişmiş Ses Sentezleyici (Sıfır Dosya - %100 Gerçek Frekans Üretimi)
     function playFlipperSound(type) {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            // Retro Flipper Zero 8-bit bip sesleri için kare dalga kullanıyoruz
-            oscillator.type = 'square'; 
             
             if (type === 'click') {
-                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Normal buton sesi
-                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(850, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
                 oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.03); 
-            } else if (type === 'success') {
-                oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime); // Başarılı işlem sesi
-                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.02); 
+            } 
+            else if (type === 'success') {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = 'square';
+                oscillator.frequency.setValueAtTime(1300, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
                 oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.1);
+                oscillator.stop(audioCtx.currentTime + 0.08);
+            } 
+            // Turnike Geçiş Başarılı Onay Sesi (Mekanik Çift Tonlu "Trink" Etkisi)
+            else if (type === 'trink') {
+                const now = audioCtx.currentTime;
+                
+                // 1. Ton (Yüksek ve net frekans başlangıcı)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(1800, now);
+                gain1.gain.setValueAtTime(0.06, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc1.start(now);
+                osc1.stop(now + 0.15);
+
+                // 2. Ton (Hemen milisaniye sonra vuran armoni)
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(2200, now + 0.04);
+                gain2.gain.setValueAtTime(0.05, now + 0.04);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc2.start(now + 0.04);
+                osc2.stop(now + 0.2);
             }
         } catch (e) {
-            console.log("Ses motoru başlatılamadı.");
+            console.log("Ses motoru donanım engeline takıldı.");
+        }
+    }
+
+    // Galeri Seçim Yönetimi (Kare içine resmi basar)
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        if (file) {
+            playFlipperSound('success');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgElement = document.getElementById('preview-img');
+                const textElement = document.getElementById('upload-text');
+                
+                imgElement.src = e.target.result;
+                imgElement.style.display = 'block'; // Resmi göster
+                textElement.style.display = 'none'; // Yazıyı gizle
+                
+                printLog(`Görsel belleğe yüklendi: ${file.name}`);
+            };
+            reader.readAsDataURL(file);
         }
     }
 
@@ -252,7 +348,7 @@
         }
     }
 
-    // Metadata Dosya Analiz Tetikleyicisi
+    // Metadata Derin Analiz Tetikleyicisi
     function runMetadataSys() {
         playFlipperSound('click');
         const fileInput = document.getElementById('meta-file');
