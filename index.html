@@ -199,8 +199,8 @@
     <div class="flipper-screen" id="flipperScreen">
         <div class="screen-title">🐬 FLIPPER CENTRAL SYSTEM</div>
         <div id="displayLogs">
-            <div class="terminal-row">> Tüm gelişmiş donanım motorları entegre edildi.</div>
-            <div class="terminal-row">> Cihaz kontrolü için hazır.</div>
+            <div class="terminal-row">> Evrensel Klima Veritabanı V2 aktif edildi.</div>
+            <div class="terminal-row">> Canlı Wi-Fi TV tarayıcı motoru hazır.</div>
         </div>
     </div>
 
@@ -218,6 +218,7 @@
         
         <label>Klima Markası Seç:</label>
         <select id="klima-brand">
+            <option value="Universal">DÜNYADAKİ TÜM MARKALAR (Evrensel Mod)</option>
             <option value="Beko">Beko</option>
             <option value="Vestel">Vestel</option>
             <option value="Daikin">Daikin</option>
@@ -240,8 +241,8 @@
         <div class="action-grid">
             <button class="ctrl-btn alert" onclick="runWifiTVAction('TV_POWER')">TV KAPAT (Wi-Fi)</button>
             <button class="ctrl-btn" onclick="runWifiTVAction('TV_MUTE')">SES KES/AÇ</button>
-            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_UP')">SES (+) BÜYÜT</button>
-            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_DOWN')">SES (-) KÜÇÜLT</button>
+            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_UP')">SES (+)</button>
+            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_DOWN')">SES (-)</button>
             <button class="ctrl-btn" onclick="runWifiTVAction('CH_UP')">KANAL (+)</button>
             <button class="ctrl-btn" onclick="runWifiTVAction('CH_DOWN')">KANAL (-)</button>
         </div>
@@ -373,22 +374,24 @@
         screen.scrollTop = screen.scrollHeight;
     }
 
-    // --- TETİKLEME ENTEGRASYONLARI ---
-
     // Klima IR Tetikleyicisi
     function runKlimaAction(action, param = "") {
         let brand = document.getElementById('klima-brand').value;
-        let logResult = generateIRKlimaSignal(brand, action, param);
-        printLog(logResult);
+        if(typeof generateIRKlimaSignal === "function") {
+            let logResult = generateIRKlimaSignal(brand, action, param);
+            printLog(logResult);
+        } else {
+            printLog("Klima motor dosyası eksik!", true);
+        }
     }
 
-    // Wi-Fi Akıllı TV Tetikleyicisi
+    // Wi-Fi TV Tetikleyicisi
     async function runWifiTVAction(action) {
         if(typeof sendWifiTVCommand === "function") {
             let logResult = await sendWifiTVCommand(action);
             printLog(logResult);
         } else {
-            printLog("Ağ tarama dosyası yüklenemedi!", true);
+            printLog("TV motor dosyası eksik!", true);
         }
     }
 
@@ -398,13 +401,12 @@
         printLog("Betik derleniyor...");
         setTimeout(() => {
             let scriptData = generateBadUsb(type);
-            printLog("DuckyScript kopyalandı! Bir metin alanına yapıştırabilirsin.");
+            printLog("DuckyScript kopyalandı! İstediğin yere yapıştırabilirsin.");
         }, 400);
     }
 
     // NFC Sistem Tetikleyicisi
     function runNFCSys(mode) {
-        let protocol = document.getElementById('nfc-protocol').value;
         if(mode === 'SCAN') {
             startNFCScan(printLog);
         } else if(mode === 'EMU') {
@@ -423,13 +425,13 @@
         }
     }
 
-    // --- KEY DECODER KONTROLLERİ ---
+    // KEY DECODER FONKSİYONLARI
     function adjustScale(amount) {
         currentScale += amount;
         if(currentScale < 0.5) currentScale = 0.5;
         if(currentScale > 2.0) currentScale = 2.0;
         document.getElementById('keyVisual').style.transform = `scale(${currentScale})`;
-        printLog(`Çizelge Ölçeği: %${Math.round(currentScale * 100)}`);
+        printLog(`Ölçek Oranı: %${Math.round(currentScale * 100)}`);
     }
 
     function adjPin(pinNum, direction) {
@@ -449,7 +451,7 @@
         for(let i = 1; i <= 6; i++) {
             finalCode.push(document.getElementById(`pin${i}`).getAttribute('data-val'));
         }
-        printLog(`Anahtar Diş Kodları Alındı: ${finalCode.join(' ')}`);
+        printLog(`Anahtar Profili Belleğe Alındı: ${finalCode.join(' ')}`);
     }
 </script>
 
