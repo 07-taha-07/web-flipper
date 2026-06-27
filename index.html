@@ -2,34 +2,60 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>WEB NFC SCANNER</title>
+    <title>NFC SHADOW CORE</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; display: flex; justify-content: center; padding-top: 50px; }
-        .container { border: 2px solid #0f0; padding: 20px; width: 350px; border-radius: 10px; }
-        #log { height: 300px; overflow-y: auto; border-top: 1px solid #333; margin-top: 10px; padding-top: 10px; font-size: 14px; }
-        button { background: #0f0; color: #000; border: none; padding: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        :root { --neon: #0ff; --bg: #050505; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Segoe UI', monospace; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { border: 1px solid var(--neon); padding: 20px; width: 100%; max-width: 400px; border-radius: 15px; box-shadow: 0 0 15px rgba(0, 255, 255, 0.2); }
+        .btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 15px; width: 100%; cursor: pointer; font-weight: bold; margin: 10px 0; border-radius: 8px; transition: 0.3s; }
+        .btn:hover { background: var(--neon); color: #000; }
+        #terminal { height: 150px; background: #000; border: 1px solid #333; padding: 10px; overflow-y: auto; font-size: 12px; margin-bottom: 20px; }
+        .log-item { border-bottom: 1px solid #222; padding: 5px 0; }
+        .history-item { display: flex; justify-content: space-between; background: #111; padding: 10px; margin: 5px 0; border-radius: 5px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h3>NFC READER CORE</h3>
-    <button onclick="startNFC()">TARAMAYI BAŞLAT</button>
-    <div id="log"></div>
+<div class="card">
+    <h2 style="text-align: center;">NFC SHADOW ENGINE</h2>
+    <div id="terminal">> Sistem hazır...</div>
+    <button class="btn" onclick="startScanning()">SİNYAL YAKALA</button>
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <h4>YAKALANAN SİNYALLER</h4>
+    <div id="history"></div>
 </div>
 
 <script src="nfc_core.js"></script>
 <script>
-    function logger(msg, isErr = false) {
-        const div = document.getElementById('log');
-        div.innerHTML += `<div style="color:${isErr ? '#f00' : '#0f0'}">${msg}</div>`;
-        div.scrollTop = div.scrollHeight;
+    function updateTerminal(msg) {
+        document.getElementById('terminal').innerHTML = `<div class="log-item">${msg}</div>`;
     }
 
-    function startNFC() {
-        if (typeof startNFCScan === "function") {
-            startNFCScan(logger);
-        }
+    function startScanning() {
+        updateTerminal("SİNYAL DİNLENİYOR...");
+        startNFCScan((msg, data) => {
+            if (data) {
+                updateTerminal("SİNYAL HAVADA KAPILDI!");
+                addHistory(data);
+            } else {
+                updateTerminal(msg);
+            }
+        });
+    }
+
+    function addHistory(data) {
+        const list = document.getElementById('history');
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `<span>UID: ${data.uid}</span> <button onclick="emulateSignal('${data.uid}')">YAY</button>`;
+        list.appendChild(item);
+    }
+
+    function emulateSignal(uid) {
+        updateTerminal("SİNYAL YAYILIYOR: " + uid);
+        setTimeout(() => updateTerminal("Sinyal simülasyonu aktif (Loop: 13.56MHz)"), 2000);
     }
 </script>
 </body>
