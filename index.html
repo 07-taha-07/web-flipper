@@ -199,8 +199,8 @@
     <div class="flipper-screen" id="flipperScreen">
         <div class="screen-title">🐬 FLIPPER CENTRAL SYSTEM</div>
         <div id="displayLogs">
-            <div class="terminal-row">> Evrensel Klima Veritabanı V2 aktif edildi.</div>
-            <div class="terminal-row">> Canlı Wi-Fi TV tarayıcı motoru hazır.</div>
+            <div class="terminal-row">> Canlı Ağ Tarayıcısı ve Ping Motoru güncellendi.</div>
+            <div class="terminal-row">> Bluetooth Beacon Spam sistemi aktif.</div>
         </div>
     </div>
 
@@ -210,7 +210,7 @@
         <button class="menu-btn" onclick="changeModule('nfc-mod')">NFC/RFID</button>
         <button class="menu-btn" onclick="changeModule('key-mod')">KEY DECODER</button>
         <button class="menu-btn" onclick="changeModule('usb-mod')">BAD USB</button>
-        <button class="menu-btn" onclick="changeModule('net-mod')">NETWORK</button>
+        <button class="menu-btn" onclick="changeModule('net-mod')">NET/BLE</button>
     </div>
 
     <div id="ir-mod" class="module-panel active">
@@ -334,12 +334,23 @@
     </div>
 
     <div id="net-mod" class="module-panel">
-        <h4>🌐 NETWORK ANALYZER</h4>
-        <label>Yerel Ağ Modem IP Adresi:</label>
+        <h4>🌐 NET & BLE ANALYZER</h4>
+        
+        <label>Bağlı Wi-Fi Hedef IP / Ağ Geçidi:</label>
         <input type="text" id="target-ip" value="192.168.1.1">
+        
         <div class="action-grid">
-            <button class="ctrl-btn" onclick="runNetworkSys('PING')">PING TEST</button>
-            <button class="ctrl-btn" onclick="runNetworkSys('SCAN')">ETRAFTAKİ TV'LERİ ARA</button>
+            <button class="ctrl-btn" onclick="runNetworkSys('PING')">PİNG AT (CANLI)</button>
+            <button class="ctrl-btn" onclick="runNetworkSys('SCAN')">AĞDAKİ HERKESİ TARA</button>
+        </div>
+
+        <hr style="border: 1px dashed #333; margin: 15px 0;">
+
+        <label>Bluetooth Low Energy (BLE) Araçları:</label>
+        <div class="action-grid">
+            <button class="ctrl-btn" onclick="runBluetoothSys('RADAR')">BLE RADAR</button>
+            <button class="ctrl-btn alert" onclick="runBluetoothSys('SPAM_START')">BEACON SPAM BAŞLAT</button>
+            <button class="ctrl-btn" style="grid-column: span 2; background-color: #333; color: #fff;" onclick="runBluetoothSys('SPAM_STOP')">SPAM DURDUR</button>
         </div>
     </div>
 </div>
@@ -348,6 +359,7 @@
 <script src="nfc_core.js"></script>
 <script src="network_scanner.js"></script>
 <script src="ir_core.js"></script>
+<script src="bluetooth_spam.js"></script>
 
 <script>
     let currentScale = 1.0;
@@ -374,7 +386,7 @@
         screen.scrollTop = screen.scrollHeight;
     }
 
-    // Klima IR Tetikleyicisi
+    // Klima IR Fonksiyonu
     function runKlimaAction(action, param = "") {
         let brand = document.getElementById('klima-brand').value;
         if(typeof generateIRKlimaSignal === "function") {
@@ -385,7 +397,7 @@
         }
     }
 
-    // Wi-Fi TV Tetikleyicisi
+    // Wi-Fi TV Fonksiyonu
     async function runWifiTVAction(action) {
         if(typeof sendWifiTVCommand === "function") {
             let logResult = await sendWifiTVCommand(action);
@@ -395,17 +407,17 @@
         }
     }
 
-    // Bad USB Tetikleyicisi
+    // Bad USB Fonksiyonu
     function runBedUSBSys() {
         let type = document.getElementById('usb-payload').value;
         printLog("Betik derleniyor...");
         setTimeout(() => {
             let scriptData = generateBadUsb(type);
-            printLog("DuckyScript kopyalandı! İstediğin yere yapıştırabilirsin.");
+            printLog("DuckyScript kopyalandı! Bir metin alanına yapıştırabilirsin.");
         }, 400);
     }
 
-    // NFC Sistem Tetikleyicisi
+    // NFC Sistem Fonksiyonu
     function runNFCSys(mode) {
         if(mode === 'SCAN') {
             startNFCScan(printLog);
@@ -414,7 +426,7 @@
         }
     }
 
-    // Ağ Tarama Tetikleyicisi
+    // Ağ Tarama Fonksiyonu (Düzeltilmiş ve Geliştirilmiş)
     function runNetworkSys(mode) {
         let target = document.getElementById('target-ip').value;
         if(mode === 'PING') {
@@ -422,6 +434,21 @@
         } else if(mode === 'SCAN') {
             let baseIP = target.substring(0, target.lastIndexOf('.'));
             scanLocalNetwork(baseIP, printLog);
+        }
+    }
+
+    // Bluetooth Sistem Fonksiyonu
+    function runBluetoothSys(mode) {
+        if(typeof toggleBluetoothSpam === "function" && typeof startBluetoothRadar === "function") {
+            if(mode === 'RADAR') {
+                startBluetoothRadar(printLog);
+            } else if(mode === 'SPAM_START') {
+                toggleBluetoothSpam('START', printLog);
+            } else if(mode === 'SPAM_STOP') {
+                toggleBluetoothSpam('STOP', printLog);
+            }
+        } else {
+            printLog("Bluetooth motor dosyası eksik!", true);
         }
     }
 
