@@ -17,7 +17,32 @@
             padding: 10px;
             box-sizing: border-box;
             user-select: none;
+            position: relative;
         }
+        
+        /* Sağ Üst Köşeye Sabitlenen Global Sıfırla Butonu */
+        #global-reset-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background-color: #ff3333;
+            color: white;
+            border: 2px solid #990000;
+            padding: 10px 18px;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            border-radius: 4px;
+            z-index: 9999;
+            box-shadow: 0 0 10px rgba(255, 51, 51, 0.4);
+            transition: all 0.2s ease;
+        }
+        #global-reset-btn:hover {
+            background-color: #cc0000;
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.8);
+            transform: scale(1.05);
+        }
+
         .flipper-device {
             border: 4px solid #ff8c00;
             background-color: #000;
@@ -50,12 +75,13 @@
             color: #00ff44;
             margin: 3px 0;
             line-height: 1.4;
+            white-space: pre-wrap;
         }
 
         /* İŞLETİM SİSTEMİ SEKMELERİ */
         .os-menu {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 6px;
             margin-bottom: 20px;
         }
@@ -64,7 +90,7 @@
             color: #ff8c00;
             border: 1px solid #ff8c00;
             padding: 12px 2px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             font-family: monospace;
@@ -111,55 +137,62 @@
             font-family: monospace;
             cursor: pointer;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             margin-top: 5px;
         }
         button.ctrl-btn:active { background-color: #cc7000; }
-
-        .image-drop-zone {
-            width: 110px;
-            height: 110px;
-            border: 2px dashed #ff8c00;
-            border-radius: 12px;
-            margin: 15px auto;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            background-color: #111;
-            overflow: hidden;
-            position: relative;
+        
+        /* SMS Modülü Ekstra Buton Tasarımları */
+        .sms-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
         }
-        .image-drop-zone span { font-size: 10px; color: #ff8c00; text-align: center; }
-        .image-drop-zone img { width: 100%; height: 100%; object-fit: cover; position: absolute; display: none; }
+        .sms-sub-btn {
+            padding: 10px;
+            font-family: monospace;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid #ff8c00;
+        }
+        #sms-restart-btn { background-color: #111; color: #ffaa00; }
+        #sms-stop-btn { background-color: #220000; color: #ff3333; border-color: #ff3333; }
     </style>
 </head>
 <body>
 
+<!-- GLOBAL RESET BUTTON -->
+<button id="global-reset-btn" onclick="globalSystemReset()">⚠️ SIFIRLA</button>
+
 <div class="flipper-device">
+    <!-- MAIN FLIPPER TERMINAL SCREEN -->
     <div class="flipper-screen" id="flipperScreen">
-        <div class="screen-title">🐬 FLIPPER REAL-OS v5.0</div>
+        <div class="screen-title">🐬 FLIPPER REAL-OS v7.0</div>
         <div id="displayLogs">
             <div class="terminal-row">> %100 Saf Donanım Modu aktif.</div>
-            <div class="terminal-row">> Akustik sinyal sniffer yükleniyor...</div>
+            <div class="terminal-row">> Tüm modül sistemleri hazır hale getirildi.</div>
         </div>
     </div>
 
+    <!-- MODÜL SEÇİM MENÜSÜ -->
     <div class="os-menu">
-        <button class="menu-btn active" onclick="changeModule('nfc-mod')">NFC</button>
-        <button class="menu-btn" onclick="changeModule('usb-mod')">BAD USB</button>
-        <button class="menu-btn" onclick="changeModule('net-mod')">PING</button>
-        <button class="menu-btn" onclick="changeModule('meta-mod')">METADATA</button>
-        <button class="menu-btn" onclick="changeModule('sig-mod')">SIGNAL SCAN</button>
+        <button class="menu-btn active" onclick="changeModule('nfc-mod')">💳 NFC SCAN</button>
+        <button class="menu-btn" onclick="changeModule('usb-mod')">⌨️ BAD USB</button>
+        <button class="menu-btn" onclick="changeModule('net-mod')">🌐 ICMP PING</button>
+        <button class="menu-btn" onclick="changeModule('sms-mod')">⚡ SMS BOMBER</button>
     </div>
 
+    <!-- 1. REAL NFC -->
     <div id="nfc-mod" class="module-panel active">
         <h4>💳 HARDWARE NFC SCANNER</h4>
         <button class="ctrl-btn" onclick="runNFCSys()">KARTI OKUMAYA BAŞLA</button>
     </div>
 
+    <!-- 2. REAL BAD USB -->
     <div id="usb-mod" class="module-panel">
         <h4>⌨️ BAD USB GENERATOR</h4>
         <select id="usb-payload">
@@ -170,36 +203,165 @@
         <button class="ctrl-btn" onclick="runBedUSBSys()">PAYLOAD ÜRET VE KOPYALA</button>
     </div>
 
+    <!-- 3. REAL PING -->
     <div id="net-mod" class="module-panel">
         <h4>🌐 NETWORK ICMP PING</h4>
         <input type="text" id="target-ip" value="192.168.1.1">
         <button class="ctrl-btn" onclick="runNetworkSys()">CANLI PİNG GÖNDER</button>
     </div>
 
-    <div id="meta-mod" class="module-panel">
-        <h4>📁 OSINT IMAGE DECODER</h4>
-        <input type="file" id="meta-file" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
-        <div class="image-drop-zone" onclick="document.getElementById('meta-file').click()">
-            <span id="upload-text">➕<br>GALERİDEN SEÇ</span>
-            <img id="preview-img" alt="Önizleme">
+    <!-- 4. REAL SMS BOMBER (SİMÜLASYON SCRIPT MOTORU) -->
+    <div id="sms-mod" class="module-panel">
+        <h4>⚡ SMS_BOMBER.PY TERMINAL</h4>
+        <label id="sms-prompt-lbl">Telefon Numarası Girin:</label>
+        <input type="text" id="sms-input" placeholder="Örn: 5403302010" oninput="validateNumberOnly(this)">
+        
+        <button class="ctrl-btn" id="sms-send-btn" onclick="submitSmsInput()">VERİYİ GÖNDER</button>
+        
+        <div class="sms-btn-grid">
+            <button class="sms-sub-btn" id="sms-restart-btn" onclick="restartSmsScript()">🔄 YENİDEN BAŞLAT</button>
+            <button class="sms-sub-btn" id="sms-stop-btn" onclick="stopSmsScript()">🛑 SONLANDIR</button>
         </div>
-        <button class="ctrl-btn" onclick="runMetadataSys()">METADATAYI TARAMA YAP</button>
-    </div>
-
-    <div id="sig-mod" class="module-panel">
-        <h4>🎙️ ACOUSTIC FREQUENCY SCANNER</h4>
-        <label style="text-align: center; margin-bottom: 15px; font-size: 11px; color: #888;">Ortamdaki analog ses frekansı dalgalarını canlı olarak tarar ve ayrıştırır.</label>
-        <button class="ctrl-btn" id="scan-toggle-btn" onclick="runSignalSys()">TARA / DURDUR</button>
     </div>
 </div>
 
+<!-- SÜRÜCÜ BAĞLANTILARI -->
 <script src="badusb_payloads.js"></script>
 <script src="nfc_core.js"></script>
 <script src="network_scanner.js"></script>
-<script src="metadata_analyzer.js"></script>
-<script src="signal_scanner.js"></script>
 
 <script>
+    // ==========================================
+    // SMS_BOMBER.PY CORE MANTIKSAL DÖNGÜSÜ (JS)
+    // ==========================================
+    let smsState = "NUMBER"; // NUMBER, AMOUNT, SPEED, RUNNING, STOPPED
+    let targetNum = "";
+    let smsAmount = 0;
+    let smsSpeed = 10;
+    let smsInterval = null;
+    let sentCount = 0;
+
+    // Sadece sayı girilmesini sağlayan filtre
+    function validateNumberOnly(input) {
+        input.value = input.value.replace(/[^0-9]/g, '');
+    }
+
+    function initSmsInterface() {
+        smsState = "NUMBER";
+        document.getElementById("sms-prompt-lbl").innerText = 'Telefon Numarası Yazın (Örn: 5403302010):';
+        document.getElementById("sms-input").placeholder = "54xxxxxxxx";
+        document.getElementById("sms-input").value = "";
+        document.getElementById("sms-input").disabled = false;
+        document.getElementById("sms-send-btn").disabled = false;
+    }
+
+    function submitSmsInput() {
+        playFlipperSound('click');
+        const inputVal = document.getElementById("sms-input").value.trim();
+        if(!inputVal) return;
+
+        document.getElementById("sms-input").value = "";
+
+        if (smsState === "NUMBER") {
+            if(inputVal.length >= 10) {
+                targetNum = inputVal;
+                printLog(`[?] Telefon Numarası: ${targetNum}`);
+                smsState = "AMOUNT";
+                document.getElementById("sms-prompt-lbl").innerText = 'Kaç SMS Gönderilsin? (Sonsuz için 0):';
+                document.getElementById("sms-input").placeholder = "Adet girin veya 0 yazın";
+            } else {
+                printLog("HATA: Eksik veya hatalı numara girdiniz!", true);
+            }
+        } 
+        else if (smsState === "AMOUNT") {
+            smsAmount = parseInt(inputVal, 10);
+            printLog(`[?] Gönderim Adedi: ${smsAmount === 0 ? "Sonsuz (0)" : smsAmount}`);
+            smsState = "SPEED";
+            document.getElementById("sms-prompt-lbl").innerText = 'Gönderim Hızını Girin (Tavsiye: 5-100):';
+            document.getElementById("sms-input").placeholder = "Hız katsayısı girin";
+        } 
+        else if (smsState === "SPEED") {
+            smsSpeed = parseInt(inputVal, 10);
+            if(smsSpeed < 1) smsSpeed = 5;
+            printLog(`[?] Gönderim Hızı: ${smsSpeed}`);
+            
+            // Simülasyonu ateşle
+            startSmsLoop();
+        }
+    }
+
+    function startSmsLoop() {
+        smsState = "RUNNING";
+        document.getElementById("sms-prompt-lbl").innerText = 'SCRIPT ÇALIŞIYOR (sms_bomber.py)...';
+        document.getElementById("sms-input").disabled = true;
+        document.getElementById("sms-send-btn").disabled = true;
+
+        printLog(`\n--- [sms_bomber.py BAŞLATILDI] ---`);
+        printLog(`[SYSTEM] Bağımlı PIP paketleri indiriliyor: requests, urllib3... Tamamlandı.`);
+        printLog(`[+] ${targetNum} numarasına istek kanalları açılıyor...\n`);
+
+        const listBrand = ["A101", "BIM", "Defacto", "Migros", "CepteSok", "BiSU", "TıklaGelsin", "SakaSu", "Marti", "Hop"];
+        sentCount = 0;
+        
+        // Hıza göre döngü süresi hesabı (milisaniye)
+        const msInterval = Math.max(150, 3000 / smsSpeed);
+
+        smsInterval = setInterval(() => {
+            sentCount++;
+            const randomBrand = listBrand[Math.floor(Math.random() * listBrand.length)];
+            
+            printLog(`[+] [İstek #${sentCount}] -> ${randomBrand} API üzerinden döküm iletildi.`);
+
+            if(smsAmount !== 0 && sentCount >= smsAmount) {
+                stopSmsScript();
+                printLog(`\n[!] GÖNDERİM TAMAMLANDI! Toplam ${sentCount} paket işlendi.`, false);
+            }
+        }, msInterval);
+    }
+
+    function stopSmsScript() {
+        playFlipperSound('click');
+        if(smsInterval) clearInterval(smsInterval);
+        smsState = "STOPPED";
+        document.getElementById("sms-prompt-lbl").innerText = 'Script durduruldu.';
+        document.getElementById("sms-input").disabled = true;
+        document.getElementById("sms-send-btn").disabled = true;
+        printLog(`\n[-] [KULLANICI DURDURDU] Script çıkış kodu ile sonlandırıldı.`, true);
+    }
+
+    function restartSmsScript() {
+        playFlipperSound('click');
+        if(smsInterval) clearInterval(smsInterval);
+        printLog(`\n[RESTART] Geçici önbellek temizlendi, script yeniden kuruluyor...`);
+        initSmsInterface();
+    }
+
+    // ==========================================
+    // GLOBAL RESET (SIFIRLA) FONKSİYONU
+    // ==========================================
+    function globalSystemReset() {
+        // 1. Çalışan tüm interval/script süreçlerini durdur
+        if(smsInterval) clearInterval(smsInterval);
+        
+        // 2. Ekranı/Terminali ilk günkü haline döndür
+        document.getElementById('displayLogs').innerHTML = `
+            <div class="terminal-row">> %100 Saf Donanım Modu aktif.</div>
+            <div class="terminal-row">> Global sıfırlama yapıldı. Bellek uçuruldu.</div>
+        `;
+        
+        // 3. SMS durumunu fabrika ayarlarına çek
+        initSmsInterface();
+
+        // 4. NFC ve diğer tampon bellekleri temizle (Varsa kopyalanan listeleri sıfırla)
+        if(typeof savedNFCCards !== 'undefined') savedNFCCards = []; 
+        
+        // Küçük bir uyarı tınısı çal
+        playFlipperSound('trink');
+    }
+
+    // ==========================================
+    // FLIPPER SOUND ENGINE & SİSTEM KLASİKLERİ
+    // ==========================================
     function playFlipperSound(type) {
         try {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -219,29 +381,8 @@
                 osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.type = 'sine';
                 osc1.frequency.setValueAtTime(1800, now); gain1.gain.setValueAtTime(0.06, now);
                 gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15); osc1.start(now); osc1.stop(now + 0.15);
-                const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
-                osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.type = 'sine';
-                osc2.frequency.setValueAtTime(2200, now + 0.04); gain2.gain.setValueAtTime(0.05, now + 0.04);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.2); osc2.start(now + 0.04); osc2.stop(now + 0.2);
             }
         } catch (e) {}
-    }
-
-    function handleFileSelect(input) {
-        const file = input.files[0];
-        if (file) {
-            playFlipperSound('success');
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgElement = document.getElementById('preview-img');
-                const textElement = document.getElementById('upload-text');
-                imgElement.src = e.target.result;
-                imgElement.style.display = 'block';
-                textElement.style.display = 'none';
-                printLog(`Görsel belleğe yüklendi: ${file.name}`);
-            };
-            reader.readAsDataURL(file);
-        }
     }
 
     function changeModule(modId) {
@@ -251,6 +392,11 @@
         document.getElementById(modId).classList.add('active');
         event.currentTarget.classList.add('active');
         printLog(`Modül aktif: ${modId.replace('-mod', '').toUpperCase()}`);
+        
+        // SMS modülüne girildiyse girdileri taze tut
+        if(modId === 'sms-mod') {
+            initSmsInterface();
+        }
     }
 
     function printLog(text, isError = false) {
@@ -271,15 +417,6 @@
         if(typeof generateBadUsb === "function") { generateBadUsb(type); playFlipperSound('success'); }
     }
     function runNetworkSys() { playFlipperSound('click'); let target = document.getElementById('target-ip').value; if(typeof executePing === "function") executePing(target, printLog); }
-    function runMetadataSys() { playFlipperSound('click'); const file = document.getElementById('meta-file').files[0]; if(typeof analyzeImageMetadata === "function") { analyzeImageMetadata(file, printLog); playFlipperSound('success'); } }
-    
-    // Sinyal Tarayıcı Tetikleyicisi
-    function runSignalSys() {
-        playFlipperSound('click');
-        if (typeof toggleSignalScanner === "function") {
-            toggleSignalScanner(printLog);
-        }
-    }
 </script>
 </body>
 </html>
