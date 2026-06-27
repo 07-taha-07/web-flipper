@@ -1,35 +1,46 @@
-// nfc_core.js - Gelişmiş Gerçek Web NFC Erişim Motoru
-
 async function startNFCScan(callbackLog) {
-    if ('NDEFReader' in window) {
-        try {
-            const ndef = new NDEFReader();
-            callbackLog("[NFC] Okuyucu aktif. Kartı telefonun arkasına yaklaştırın...");
-            await ndef.scan();
-            
-            ndef.onreading = event => {
-                const serialNumber = event.serialNumber;
-                
-                // index.html içindeki küresel ses motorunu tetikler
-                if (typeof playFlipperSound === "function") {
-                    playFlipperSound('trink'); 
-                }
-                
-                callbackLog(`[NFC BAŞARILI] Gerçek Kart UID: ${serialNumber}`);
-                localStorage.setItem("saved_nfc_uid", serialNumber);
-            };
-
-            ndef.onreadingerror = () => {
-                callbackLog("[NFC HATA] Kart okunamadı. Sinyal kesildi.", true);
-            };
-        } catch (error) {
-            callbackLog(`[NFC HATA] Başlatılamadı: ${error.message}`, true);
-        }
-    } else {
-        callbackLog("[NFC DESTEKLENMİYOR] Bu cihaz gerçek Web NFC özelliğini desteklemiyor.", true);
+    if (!('NDEFReader' in window)) {
+        callbackLog("[HATA] Tarayıcınız Web NFC desteklemiyor.", true);
+        return;
     }
-}
 
-function emulateSavedNFC(callbackLog) {
-    callbackLog("[NFC HATA] Tarayıcı güvenliği dışarıya sinyal yaymayı engeller.", true);
+    try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        callbackLog("[SİSTEM] NFC taraması aktif. Kartı yaklaştırın...");
+
+        ndef.onreading = event => {
+            const { serialNumber, message } = event;
+            
+            // 1. Temel Bilgi
+            callbackLog(`--- YENİ KART TESPİT EDİLDİ ---`);
+            callbackLog(`UID (Seri No): ${serialNumber}`);
+
+            // 2. Kart İçeriğindeki Tüm Kayıtları İncele
+            if (message.records.length > 0) {
+                message.records.forEach((record, index) => {
+                    const textDecoder = new TextDecoder(record.encoding || 'utf-8');
+                    const data = textDecoder.decode(record.data);
+
+                    callbackLog(`[Kayıt ${index + 1}]`);
+                    callbackLog(`  - Tip: ${record.recordType}`);
+                    callbackLog(`  - Medya Tipi: ${record.mediaType || 'N/A'}`);
+                    callbackLog(`  - Veri: ${data}`);
+                });
+            } else {
+                callbackLog("[BİLGİ] Kart boş veya NDEF formatında değil.");
+            }
+
+            // Geri bildirim sesi
+            if (typeof playFlipperSound === "function") playFlipperSound('trink');
+            localStorage.setItem("last_nfc_scan", JSON.stringify({uid: serialNumber, time: Date.now()}));
+        };
+
+        ndef.onreadingerror = () => {
+            callbackLog("[HATA] Kart okuma sırasında hata oluştu. Sabit tutun.", true);
+        };
+
+    } catch (error) {
+        callbackLog(`[HATA] Erişim reddedildi veya donanım meşgul: ${error.message}`, true);
+    }
 }
