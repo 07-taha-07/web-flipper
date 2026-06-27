@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FLIPPER ZERO SYSTEM OS</title>
+    <title>FLIPPER WEB TOOLKIT</title>
     <style>
         body {
             background-color: #0b0b0b;
@@ -52,72 +52,6 @@
             line-height: 1.4;
         }
 
-        /* ANAHTAR DECODER ALANI */
-        .decoder-wrapper {
-            border: 1px dashed #ff8c00;
-            padding: 10px;
-            margin-bottom: 15px;
-            background: #111;
-            border-radius: 8px;
-        }
-        .scale-control-panel {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            background: #222;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        .scale-control-panel button {
-            background: #ff8c00;
-            color: #000;
-            border: none;
-            padding: 5px 10px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: monospace;
-        }
-        .key-decoder-visual {
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
-            height: 60px;
-            border-bottom: 2px solid #ff8c00;
-            margin: 15px auto;
-            padding-bottom: 5px;
-            width: 100%;
-            transition: transform 0.2s;
-            transform-origin: bottom center;
-        }
-        .key-pin-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 14%;
-        }
-        .pin-adj-btn {
-            background: #222;
-            color: #ff8c00;
-            border: 1px solid #ff8c00;
-            font-size: 10px;
-            cursor: pointer;
-            width: 20px;
-            height: 20px;
-            padding: 0;
-            font-weight: bold;
-        }
-        .key-pin {
-            width: 14px;
-            background-color: #ff8c00;
-            text-align: center;
-            color: #000;
-            font-size: 11px;
-            font-weight: bold;
-            margin: 4px 0;
-            height: 15px;
-        }
-
         /* İŞLETİM SİSTEMİ SEKMELERİ */
         .os-menu {
             display: grid;
@@ -129,7 +63,7 @@
             background-color: #1a1a1a;
             color: #ff8c00;
             border: 1px solid #ff8c00;
-            padding: 8px 4px;
+            padding: 10px 4px;
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
@@ -151,7 +85,7 @@
         }
         .module-panel.active { display: block; }
         
-        h4 { margin: 0 0 12px 0; text-align: center; font-size: 15px; color: #ffaa00; text-transform: uppercase; }
+        h4 { margin: 0 0 12px 0; text-align: center; font-size: 14px; color: #ffaa00; text-transform: uppercase; }
         label { display: block; margin: 10px 0 5px 0; font-size: 12px; font-weight: bold; }
         
         select, input {
@@ -166,204 +100,69 @@
             border-radius: 4px;
         }
 
-        .action-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .triple-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 10px;
-        }
         button.ctrl-btn {
+            width: 100%;
             background-color: #ff8c00;
             color: #000;
             border: none;
-            padding: 12px;
+            padding: 14px;
             font-weight: bold;
             font-family: monospace;
             cursor: pointer;
             border-radius: 6px;
             font-size: 12px;
+            text-transform: uppercase;
         }
         button.ctrl-btn:active { background-color: #cc7000; }
-        button.alert { background-color: #ff2222; color: #fff; }
-        button.alert:active { background-color: #aa0000; }
     </style>
 </head>
 <body>
 
 <div class="flipper-device">
     <div class="flipper-screen" id="flipperScreen">
-        <div class="screen-title">🐬 FLIPPER CENTRAL SYSTEM</div>
+        <div class="screen-title">🐬 FLIPPER HARDWARE INTERFACE</div>
         <div id="displayLogs">
-            <div class="terminal-row">> Canlı Ağ Tarayıcısı ve Ping Motoru güncellendi.</div>
-            <div class="terminal-row">> Bluetooth Beacon Spam sistemi aktif.</div>
+            <div class="terminal-row">> Sistem hazır. Simülasyon modları kaldırıldı.</div>
+            <div class="terminal-row">> Donanım API bağlantıları aktif.</div>
         </div>
     </div>
 
     <div class="os-menu">
-        <button class="menu-btn active" onclick="changeModule('ir-mod')">INFRARED</button>
-        <button class="menu-btn" onclick="changeModule('sub-mod')">SUB-GHz</button>
-        <button class="menu-btn" onclick="changeModule('nfc-mod')">NFC/RFID</button>
-        <button class="menu-btn" onclick="changeModule('key-mod')">KEY DECODER</button>
+        <button class="menu-btn active" onclick="changeModule('nfc-mod')">NFC READER</button>
         <button class="menu-btn" onclick="changeModule('usb-mod')">BAD USB</button>
-        <button class="menu-btn" onclick="changeModule('net-mod')">NET/BLE</button>
+        <button class="menu-btn" onclick="changeModule('net-mod')">PING TOOL</button>
     </div>
 
-    <div id="ir-mod" class="module-panel active">
-        <h4>📡 INFRARED & SMART REMOTE</h4>
-        
-        <label>Klima Markası Seç:</label>
-        <select id="klima-brand">
-            <option value="Universal">DÜNYADAKİ TÜM MARKALAR (Evrensel Mod)</option>
-            <option value="Beko">Beko</option>
-            <option value="Vestel">Vestel</option>
-            <option value="Daikin">Daikin</option>
-        </select>
-        
-        <div class="action-grid">
-            <button class="ctrl-btn alert" onclick="runKlimaAction('POWER')">KLİMA AÇ/KAPAT</button>
-            <button class="ctrl-btn" onclick="runKlimaAction('MODE_COOL')">SOĞUTMA MODU</button>
-        </div>
-        
-        <div class="triple-grid">
-            <button class="ctrl-btn" onclick="runKlimaAction('SET_TEMP', '22')">22°C</button>
-            <button class="ctrl-btn" onclick="runKlimaAction('SET_TEMP', '24')">24°C</button>
-            <button class="ctrl-btn" onclick="runKlimaAction('SET_TEMP', '26')">26°C</button>
-        </div>
-
-        <hr style="border: 1px dashed #333; margin: 15px 0;">
-
-        <label>Wi-Fi TV Canlı Kontrol (Eşleşen TV):</label>
-        <div class="action-grid">
-            <button class="ctrl-btn alert" onclick="runWifiTVAction('TV_POWER')">TV KAPAT (Wi-Fi)</button>
-            <button class="ctrl-btn" onclick="runWifiTVAction('TV_MUTE')">SES KES/AÇ</button>
-            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_UP')">SES (+)</button>
-            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_DOWN')">SES (-)</button>
-            <button class="ctrl-btn" onclick="runWifiTVAction('CH_UP')">KANAL (+)</button>
-            <button class="ctrl-btn" onclick="runWifiTVAction('CH_DOWN')">KANAL (-)</button>
-        </div>
-    </div>
-
-    <div id="sub-mod" class="module-panel">
-        <h4>📻 SUB-GHz RADIO</h4>
-        <label>Frekans Modülasyonu:</label>
-        <select id="sub-frequency">
-            <option value="433.92">433.92 MHz (Araba / Garaj)</option>
-            <option value="315.00">315.00 MHz (Bariyerler)</option>
-            <option value="868.35">868.35 MHz (Güvenlikli Kapılar)</option>
-        </select>
-        <div class="action-grid">
-            <button class="ctrl-btn" onclick="runSubGhz('RX')">SİNYAL YAKALA</button>
-            <button class="ctrl-btn alert" onclick="runSubGhz('TX')">SİNYAL YAY (TX)</button>
-        </div>
-    </div>
-
-    <div id="nfc-mod" class="module-panel">
-        <h4>💳 NFC & RFID EMULATOR</h4>
-        <label>Kart Protokolü:</label>
-        <select id="nfc-protocol">
-            <option value="Mifare">Mifare Classic 1K (Otobüs/Otel)</option>
-            <option value="RFID 125">RFID 125 kHz (Göstergeç)</option>
-            <option value="NTAG">NTAG21X (RFID Etiket)</option>
-        </select>
-        <div class="action-grid">
-            <button class="ctrl-btn" onclick="runNFCSys('SCAN')">KART OKU / KOPYALA</button>
-            <button class="ctrl-btn alert" onclick="runNFCSys('EMU')">KARTI YAYINLA</button>
-        </div>
-    </div>
-
-    <div id="key-mod" class="module-panel">
-        <h4>🔑 KEY DECODER (PRO)</h4>
-        <div class="scale-control-panel">
-            <span style="font-size: 11px;">Çizelge Boyutu:</span>
-            <button onclick="adjustScale(0.1)">BÜYÜT (+)</button>
-            <button onclick="adjustScale(-0.1)">KÜÇÜLT (-)</button>
-        </div>
-        <div class="decoder-wrapper">
-            <div class="key-decoder-visual" id="keyVisual">
-                <div class="key-pin-box">
-                    <button class="pin-adj-btn" onclick="adjPin(1, 1)">+</button>
-                    <div class="key-pin" id="pin1" data-val="0">0</div>
-                    <button class="pin-adj-btn" onclick="adjPin(1, -1)">-</button>
-                </div>
-                <div class="key-pin-box">
-                    <button class="pin-adj-btn" onclick="adjPin(2, 1)">+</button>
-                    <div class="key-pin" id="pin2" data-val="0">0</div>
-                    <button class="pin-adj-btn" onclick="adjPin(2, -1)">-</button>
-                </div>
-                <div class="key-pin-box">
-                    <button class="pin-adj-btn" onclick="adjPin(3, 1)">+</button>
-                    <div class="key-pin" id="pin3" data-val="0">0</div>
-                    <button class="pin-adj-btn" onclick="adjPin(3, -1)">-</button>
-                </div>
-                <div class="key-pin-box">
-                    <button class="pin-adj-btn" onclick="adjPin(4, 1)">+</button>
-                    <div class="key-pin" id="pin4" data-val="0">0</div>
-                    <button class="pin-adj-btn" onclick="adjPin(4, -1)">-</button>
-                </div>
-                <div class="key-pin-box">
-                    <button class="pin-adj-btn" onclick="adjPin(5, 1)">+</button>
-                    <div class="key-pin" id="pin5" data-val="0">0</div>
-                    <button class="pin-adj-btn" onclick="adjPin(5, -1)">-</button>
-                </div>
-                <div class="key-pin-box">
-                    <button class="pin-adj-btn" onclick="adjPin(6, 1)">+</button>
-                    <div class="key-pin" id="pin6" data-val="0">0</div>
-                    <button class="pin-adj-btn" onclick="adjPin(6, -1)">-</button>
-                </div>
-            </div>
-        </div>
-        <div class="action-grid">
-            <button class="ctrl-btn" style="grid-column: span 2;" onclick="getFinalKeyData()">AYARLANAN KODU SİSTEME KAYDET</button>
-        </div>
+    <div id="nfc-mod" class="module-panel active">
+        <h4>💳 HARDWARE NFC SCANNER</h4>
+        <p style="font-size: 11px; color: #888; margin-top: 0;">Yalnızca NFC destekli Android cihazlarda ve HTTPS bağlantılarında fiziksel kartları okur.</p>
+        <button class="ctrl-btn" onclick="runNFCSys('SCAN')">KARTI OKUMAYA BAŞLA</button>
     </div>
 
     <div id="usb-mod" class="module-panel">
-        <h4>⌨️ BAD USB SCRIPT GENERATOR</h4>
-        <label>Saldırı Senaryosu:</label>
+        <h4>⌨️ BAD USB SCRIPT INJECTOR</h4>
+        <label>Saldırı Senaryosu Seçin:</label>
         <select id="usb-payload">
             <option value="WIFI">Kayıtlı Wi-Fi Şifrelerini Göster</option>
             <option value="LOCK">Hedef Bilgisayarı Kilitle</option>
-            <option value="FAKE">Sahte Windows Çökme Ekranı Aç</option>
+            <option value="FAKE">Sahte Windows Güncelleme Ekranı Aç</option>
         </select>
-        <button class="ctrl-btn" style="width: 100%;" onclick="runBedUSBSys()">PAYLOAD ÜRET</button>
+        <button class="ctrl-btn" onclick="runBedUSBSys()">PAYLOAD ÜRET VE KOPYALA</button>
     </div>
 
     <div id="net-mod" class="module-panel">
-        <h4>🌐 NET & BLE ANALYZER</h4>
-        
-        <label>Bağlı Wi-Fi Hedef IP / Ağ Geçidi:</label>
+        <h4>🌐 NETWORK ICMP/HTTP PING</h4>
+        <label>Hedef Cihazın IP Adresi:</label>
         <input type="text" id="target-ip" value="192.168.1.1">
-        
-        <div class="action-grid">
-            <button class="ctrl-btn" onclick="runNetworkSys('PING')">PİNG AT (CANLI)</button>
-            <button class="ctrl-btn" onclick="runNetworkSys('SCAN')">AĞDAKİ HERKESİ TARA</button>
-        </div>
-
-        <hr style="border: 1px dashed #333; margin: 15px 0;">
-
-        <label>Bluetooth Low Energy (BLE) Araçları:</label>
-        <div class="action-grid">
-            <button class="ctrl-btn" onclick="runBluetoothSys('RADAR')">BLE RADAR</button>
-            <button class="ctrl-btn alert" onclick="runBluetoothSys('SPAM_START')">BEACON SPAM BAŞLAT</button>
-            <button class="ctrl-btn" style="grid-column: span 2; background-color: #333; color: #fff;" onclick="runBluetoothSys('SPAM_STOP')">SPAM DURDUR</button>
-        </div>
+        <button class="ctrl-btn" onclick="runNetworkSys('PING')">CANLI PİNG GÖNDER</button>
     </div>
 </div>
 
 <script src="badusb_payloads.js"></script>
 <script src="nfc_core.js"></script>
 <script src="network_scanner.js"></script>
-<script src="ir_core.js"></script>
-<script src="bluetooth_spam.js"></script>
 
 <script>
-    let currentScale = 1.0;
-
     function changeModule(modId) {
         document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
@@ -386,99 +185,34 @@
         screen.scrollTop = screen.scrollHeight;
     }
 
-    // Klima IR Fonksiyonu
-    function runKlimaAction(action, param = "") {
-        let brand = document.getElementById('klima-brand').value;
-        if(typeof generateIRKlimaSignal === "function") {
-            let logResult = generateIRKlimaSignal(brand, action, param);
-            printLog(logResult);
+    // Gerçek NFC Tetikleyicisi
+    function runNFCSys(mode) {
+        if(typeof startNFCScan === "function") {
+            startNFCScan(printLog);
         } else {
-            printLog("Klima motor dosyası eksik!", true);
+            printLog("NFC sürücü dosyası bulunamadı!", true);
         }
     }
 
-    // Wi-Fi TV Fonksiyonu
-    async function runWifiTVAction(action) {
-        if(typeof sendWifiTVCommand === "function") {
-            let logResult = await sendWifiTVCommand(action);
-            printLog(logResult);
-        } else {
-            printLog("TV motor dosyası eksik!", true);
-        }
-    }
-
-    // Bad USB Fonksiyonu
+    // Gerçek Bad USB Kopyalayıcısı
     function runBedUSBSys() {
         let type = document.getElementById('usb-payload').value;
-        printLog("Betik derleniyor...");
-        setTimeout(() => {
+        if(typeof generateBadUsb === "function") {
             let scriptData = generateBadUsb(type);
-            printLog("DuckyScript kopyalandı! Bir metin alanına yapıştırabilirsin.");
-        }, 400);
-    }
-
-    // NFC Sistem Fonksiyonu
-    function runNFCSys(mode) {
-        if(mode === 'SCAN') {
-            startNFCScan(printLog);
-        } else if(mode === 'EMU') {
-            emulateSavedNFC(printLog);
+            printLog(`DuckyScript başarıyla üretildi ve panoya alındı.`);
+        } else {
+            printLog("Bad USB sürücü dosyası bulunamadı!", true);
         }
     }
 
-    // Ağ Tarama Fonksiyonu (Düzeltilmiş ve Geliştirilmiş)
+    // Gerçek Canlı Ping Tetikleyicisi
     function runNetworkSys(mode) {
         let target = document.getElementById('target-ip').value;
-        if(mode === 'PING') {
+        if(typeof executePing === "function") {
             executePing(target, printLog);
-        } else if(mode === 'SCAN') {
-            let baseIP = target.substring(0, target.lastIndexOf('.'));
-            scanLocalNetwork(baseIP, printLog);
-        }
-    }
-
-    // Bluetooth Sistem Fonksiyonu
-    function runBluetoothSys(mode) {
-        if(typeof toggleBluetoothSpam === "function" && typeof startBluetoothRadar === "function") {
-            if(mode === 'RADAR') {
-                startBluetoothRadar(printLog);
-            } else if(mode === 'SPAM_START') {
-                toggleBluetoothSpam('START', printLog);
-            } else if(mode === 'SPAM_STOP') {
-                toggleBluetoothSpam('STOP', printLog);
-            }
         } else {
-            printLog("Bluetooth motor dosyası eksik!", true);
+            printLog("Ağ analiz sürücü dosyası bulunamadı!", true);
         }
-    }
-
-    // KEY DECODER FONKSİYONLARI
-    function adjustScale(amount) {
-        currentScale += amount;
-        if(currentScale < 0.5) currentScale = 0.5;
-        if(currentScale > 2.0) currentScale = 2.0;
-        document.getElementById('keyVisual').style.transform = `scale(${currentScale})`;
-        printLog(`Ölçek Oranı: %${Math.round(currentScale * 100)}`);
-    }
-
-    function adjPin(pinNum, direction) {
-        let pin = document.getElementById(`pin${pinNum}`);
-        let currentVal = parseInt(pin.getAttribute('data-val'));
-        currentVal += direction;
-        if(currentVal < 0) currentVal = 0;
-        if(currentVal > 9) currentVal = 9;
-        
-        pin.setAttribute('data-val', currentVal);
-        pin.innerText = currentVal;
-        pin.style.height = `${15 + (currentVal * 4)}px`;
-    }
-
-    function getFinalKeyData() {
-        let finalCode = [];
-        for(let i = 1; i <= 6; i++) {
-            finalCode.push(document.getElementById(`pin${i}`).getAttribute('data-val'));
-        }
-        printLog(`Anahtar Profili Belleğe Alındı: ${finalCode.join(' ')}`);
     }
 </script>
 
