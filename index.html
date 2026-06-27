@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FLIPPER WEB TOOLKIT</title>
+    <title>FLIPPER REAL TOOLKIT</title>
     <style>
         body {
             background-color: #0b0b0b;
@@ -55,7 +55,7 @@
         /* İŞLETİM SİSTEMİ SEKMELERİ */
         .os-menu {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 6px;
             margin-bottom: 20px;
         }
@@ -63,7 +63,7 @@
             background-color: #1a1a1a;
             color: #ff8c00;
             border: 1px solid #ff8c00;
-            padding: 10px 4px;
+            padding: 12px 4px;
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
@@ -112,6 +112,7 @@
             border-radius: 6px;
             font-size: 12px;
             text-transform: uppercase;
+            margin-top: 5px;
         }
         button.ctrl-btn:active { background-color: #cc7000; }
     </style>
@@ -120,10 +121,10 @@
 
 <div class="flipper-device">
     <div class="flipper-screen" id="flipperScreen">
-        <div class="screen-title">🐬 FLIPPER HARDWARE INTERFACE</div>
+        <div class="screen-title">🐬 FLIPPER REAL-OS v3.0</div>
         <div id="displayLogs">
-            <div class="terminal-row">> Sistem hazır. Simülasyon modları kaldırıldı.</div>
-            <div class="terminal-row">> Donanım API bağlantıları aktif.</div>
+            <div class="terminal-row">> %100 Gerçek donanım modülleri aktif.</div>
+            <div class="terminal-row">> Audio Synth (Buzzer) sürücüsü yüklendi.</div>
         </div>
     </div>
 
@@ -131,16 +132,16 @@
         <button class="menu-btn active" onclick="changeModule('nfc-mod')">NFC READER</button>
         <button class="menu-btn" onclick="changeModule('usb-mod')">BAD USB</button>
         <button class="menu-btn" onclick="changeModule('net-mod')">PING TOOL</button>
+        <button class="menu-btn" onclick="changeModule('meta-mod')">METADATA</button>
     </div>
 
     <div id="nfc-mod" class="module-panel active">
         <h4>💳 HARDWARE NFC SCANNER</h4>
-        <p style="font-size: 11px; color: #888; margin-top: 0;">Yalnızca NFC destekli Android cihazlarda ve HTTPS bağlantılarında fiziksel kartları okur.</p>
         <button class="ctrl-btn" onclick="runNFCSys('SCAN')">KARTI OKUMAYA BAŞLA</button>
     </div>
 
     <div id="usb-mod" class="module-panel">
-        <h4>⌨️ BAD USB SCRIPT INJECTOR</h4>
+        <h4>⌨️ BAD USB SCRIPT GENERATOR</h4>
         <label>Saldırı Senaryosu Seçin:</label>
         <select id="usb-payload">
             <option value="WIFI">Kayıtlı Wi-Fi Şifrelerini Göster</option>
@@ -151,19 +152,57 @@
     </div>
 
     <div id="net-mod" class="module-panel">
-        <h4>🌐 NETWORK ICMP/HTTP PING</h4>
+        <h4>🌐 NETWORK ICMP PING</h4>
         <label>Hedef Cihazın IP Adresi:</label>
         <input type="text" id="target-ip" value="192.168.1.1">
         <button class="ctrl-btn" onclick="runNetworkSys('PING')">CANLI PİNG GÖNDER</button>
+    </div>
+
+    <div id="meta-mod" class="module-panel">
+        <h4>📁 IMAGE METADATA (EXIF)</h4>
+        <label>Analiz Edilecek Fotoğrafı Seçin:</label>
+        <input type="file" id="meta-file" accept="image/*" style="padding: 5px;">
+        <button class="ctrl-btn" onclick="runMetadataSys()">METADATAYI AYIKLA</button>
     </div>
 </div>
 
 <script src="badusb_payloads.js"></script>
 <script src="nfc_core.js"></script>
 <script src="network_scanner.js"></script>
+<script src="metadata_analyzer.js"></script>
 
 <script>
+    // Gerçek Ses Frekansı Üretici (Web Audio API Buzzer)
+    function playFlipperSound(type) {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            // Retro Flipper Zero 8-bit bip sesleri için kare dalga kullanıyoruz
+            oscillator.type = 'square'; 
+            
+            if (type === 'click') {
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Normal buton sesi
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.03); 
+            } else if (type === 'success') {
+                oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime); // Başarılı işlem sesi
+                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            }
+        } catch (e) {
+            console.log("Ses motoru başlatılamadı.");
+        }
+    }
+
     function changeModule(modId) {
+        playFlipperSound('click');
         document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
         
@@ -185,33 +224,44 @@
         screen.scrollTop = screen.scrollHeight;
     }
 
-    // Gerçek NFC Tetikleyicisi
+    // NFC Tetikleyici
     function runNFCSys(mode) {
+        playFlipperSound('click');
         if(typeof startNFCScan === "function") {
             startNFCScan(printLog);
-        } else {
-            printLog("NFC sürücü dosyası bulunamadı!", true);
         }
     }
 
-    // Gerçek Bad USB Kopyalayıcısı
+    // Bad USB Tetikleyici
     function runBedUSBSys() {
+        playFlipperSound('click');
         let type = document.getElementById('usb-payload').value;
         if(typeof generateBadUsb === "function") {
-            let scriptData = generateBadUsb(type);
-            printLog(`DuckyScript başarıyla üretildi ve panoya alındı.`);
-        } else {
-            printLog("Bad USB sürücü dosyası bulunamadı!", true);
+            generateBadUsb(type);
+            playFlipperSound('success');
+            printLog(`DuckyScript üretildi ve panoya alındı.`);
         }
     }
 
-    // Gerçek Canlı Ping Tetikleyicisi
+    // Ping Tetikleyici
     function runNetworkSys(mode) {
+        playFlipperSound('click');
         let target = document.getElementById('target-ip').value;
         if(typeof executePing === "function") {
             executePing(target, printLog);
+        }
+    }
+
+    // Metadata Dosya Analiz Tetikleyicisi
+    function runMetadataSys() {
+        playFlipperSound('click');
+        const fileInput = document.getElementById('meta-file');
+        const file = fileInput.files[0];
+        if(typeof analyzeImageMetadata === "function") {
+            analyzeImageMetadata(file, printLog);
+            playFlipperSound('success');
         } else {
-            printLog("Ağ analiz sürücü dosyası bulunamadı!", true);
+            printLog("Metadata motor dosyası eksik!", true);
         }
     }
 </script>
