@@ -171,6 +171,12 @@
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
+        .triple-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
         button.ctrl-btn {
             background-color: #ff8c00;
             color: #000;
@@ -180,7 +186,7 @@
             font-family: monospace;
             cursor: pointer;
             border-radius: 6px;
-            font-size: 13px;
+            font-size: 12px;
         }
         button.ctrl-btn:active { background-color: #cc7000; }
         button.alert { background-color: #ff2222; color: #fff; }
@@ -193,8 +199,8 @@
     <div class="flipper-screen" id="flipperScreen">
         <div class="screen-title">🐬 FLIPPER CENTRAL SYSTEM</div>
         <div id="displayLogs">
-            <div class="terminal-row">> Çekirdek yazılım ve harici scriptler bağlandı.</div>
-            <div class="terminal-row">> Sistem aktif. Bir modül seçin...</div>
+            <div class="terminal-row">> Tüm gelişmiş donanım motorları entegre edildi.</div>
+            <div class="terminal-row">> Cihaz kontrolü için hazır.</div>
         </div>
     </div>
 
@@ -208,20 +214,36 @@
     </div>
 
     <div id="ir-mod" class="module-panel active">
-        <h4>📡 INFRARED TRANSMITTER</h4>
-        <label>Cihaz / Sinyal Veritabanı:</label>
-        <select id="ir-database">
-            <option value="Samsung">Samsung TV</option>
-            <option value="LG">LG Smart TV</option>
-            <option value="Sony">Sony Bravia</option>
-            <option value="Vestel">Vestel / Beko</option>
-            <option value="Klima">Universal Klima</option>
+        <h4>📡 INFRARED & SMART REMOTE</h4>
+        
+        <label>Klima Markası Seç:</label>
+        <select id="klima-brand">
+            <option value="Beko">Beko</option>
+            <option value="Vestel">Vestel</option>
+            <option value="Daikin">Daikin</option>
         </select>
+        
         <div class="action-grid">
-            <button class="ctrl-btn alert" onclick="runIRSystem('POWER')">GÜÇ (IR)</button>
-            <button class="ctrl-btn" onclick="runIRSystem('MUTE')">SES KES</button>
-            <button class="ctrl-btn" onclick="runIRSystem('SRC')">KAYNAK</button>
-            <button class="ctrl-btn" onclick="runIRSystem('RX')">KODU KOPYALA</button>
+            <button class="ctrl-btn alert" onclick="runKlimaAction('POWER')">KLİMA AÇ/KAPAT</button>
+            <button class="ctrl-btn" onclick="runKlimaAction('MODE_COOL')">SOĞUTMA MODU</button>
+        </div>
+        
+        <div class="triple-grid">
+            <button class="ctrl-btn" onclick="runKlimaAction('SET_TEMP', '22')">22°C</button>
+            <button class="ctrl-btn" onclick="runKlimaAction('SET_TEMP', '24')">24°C</button>
+            <button class="ctrl-btn" onclick="runKlimaAction('SET_TEMP', '26')">26°C</button>
+        </div>
+
+        <hr style="border: 1px dashed #333; margin: 15px 0;">
+
+        <label>Wi-Fi TV Canlı Kontrol (Eşleşen TV):</label>
+        <div class="action-grid">
+            <button class="ctrl-btn alert" onclick="runWifiTVAction('TV_POWER')">TV KAPAT (Wi-Fi)</button>
+            <button class="ctrl-btn" onclick="runWifiTVAction('TV_MUTE')">SES KES/AÇ</button>
+            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_UP')">SES (+) BÜYÜT</button>
+            <button class="ctrl-btn" onclick="runWifiTVAction('VOL_DOWN')">SES (-) KÜÇÜLT</button>
+            <button class="ctrl-btn" onclick="runWifiTVAction('CH_UP')">KANAL (+)</button>
+            <button class="ctrl-btn" onclick="runWifiTVAction('CH_DOWN')">KANAL (-)</button>
         </div>
     </div>
 
@@ -307,16 +329,16 @@
             <option value="LOCK">Hedef Bilgisayarı Kilitle</option>
             <option value="FAKE">Sahte Windows Çökme Ekranı Aç</option>
         </select>
-        <button class="ctrl-btn" style="width: 100%;" onclick="runBadUSBSys()">PAYLOAD ÜRET</button>
+        <button class="ctrl-btn" style="width: 100%;" onclick="runBedUSBSys()">PAYLOAD ÜRET</button>
     </div>
 
     <div id="net-mod" class="module-panel">
         <h4>🌐 NETWORK ANALYZER</h4>
-        <label>Yerel Ağ Hedefi / Modem IP:</label>
+        <label>Yerel Ağ Modem IP Adresi:</label>
         <input type="text" id="target-ip" value="192.168.1.1">
         <div class="action-grid">
             <button class="ctrl-btn" onclick="runNetworkSys('PING')">PING TEST</button>
-            <button class="ctrl-btn" onclick="runNetworkSys('SCAN')">AĞI TARA</button>
+            <button class="ctrl-btn" onclick="runNetworkSys('SCAN')">ETRAFTAKİ TV'LERİ ARA</button>
         </div>
     </div>
 </div>
@@ -324,6 +346,7 @@
 <script src="badusb_payloads.js"></script>
 <script src="nfc_core.js"></script>
 <script src="network_scanner.js"></script>
+<script src="ir_core.js"></script>
 
 <script>
     let currentScale = 1.0;
@@ -335,7 +358,7 @@
         document.getElementById(modId).classList.add('active');
         event.currentTarget.classList.add('active');
         
-        printLog(`Modül değiştirildi: ${modId.replace('-mod', '').toUpperCase()}`);
+        printLog(`Modül aktif: ${modId.replace('-mod', '').toUpperCase()}`);
     }
 
     function printLog(text, isError = false) {
@@ -350,34 +373,49 @@
         screen.scrollTop = screen.scrollHeight;
     }
 
-    // --- ENTEGRASYON VE TETİKLEME MOTORLARI ---
+    // --- TETİKLEME ENTEGRASYONLARI ---
 
-    // 1. Harici Bad USB Entegrasyonu
-    function runBadUSBSys() {
+    // Klima IR Tetikleyicisi
+    function runKlimaAction(action, param = "") {
+        let brand = document.getElementById('klima-brand').value;
+        let logResult = generateIRKlimaSignal(brand, action, param);
+        printLog(logResult);
+    }
+
+    // Wi-Fi Akıllı TV Tetikleyicisi
+    async function runWifiTVAction(action) {
+        if(typeof sendWifiTVCommand === "function") {
+            let logResult = await sendWifiTVCommand(action);
+            printLog(logResult);
+        } else {
+            printLog("Ağ tarama dosyası yüklenemedi!", true);
+        }
+    }
+
+    // Bad USB Tetikleyicisi
+    function runBedUSBSys() {
         let type = document.getElementById('usb-payload').value;
         printLog("Betik derleniyor...");
         setTimeout(() => {
             let scriptData = generateBadUsb(type);
-            printLog("DuckyScript üretildi ve panoya kopyalandı!");
-        }, 500);
+            printLog("DuckyScript kopyalandı! Bir metin alanına yapıştırabilirsin.");
+        }, 400);
     }
 
-    // 2. Harici NFC Entegrasyonu
+    // NFC Sistem Tetikleyicisi
     function runNFCSys(mode) {
         let protocol = document.getElementById('nfc-protocol').value;
         if(mode === 'SCAN') {
-            printLog(`${protocol} modül taraması başlatılıyor...`);
             startNFCScan(printLog);
         } else if(mode === 'EMU') {
             emulateSavedNFC(printLog);
         }
     }
 
-    // 3. Harici Network Entegrasyonu
+    // Ağ Tarama Tetikleyicisi
     function runNetworkSys(mode) {
         let target = document.getElementById('target-ip').value;
         if(mode === 'PING') {
-            printLog(`${target} adresine ping paketi atılıyor...`);
             executePing(target, printLog);
         } else if(mode === 'SCAN') {
             let baseIP = target.substring(0, target.lastIndexOf('.'));
@@ -385,29 +423,13 @@
         }
     }
 
-    // 4. Infrared Sistemi tetikleyicisi (Geliştirmeye açık)
-    function runIRSystem(action) {
-        let brand = document.getElementById('ir-database').value;
-        if(action === 'POWER') printLog(`${brand} için kızılötesi kapatma (HEX) fırlatıldı.`);
-        if(action === 'MUTE') printLog(`${brand} ses kesme komutu iletildi.`);
-        if(action === 'SRC') printLog(`${brand} kaynak seçimi tetiklendi.`);
-        if(action === 'RX') printLog("Kızılötesi gözü aktiflendi. Sinyal bekleniyor...");
-    }
-
-    // 5. Sub-Ghz Tetikleyicisi
-    function runSubGhz(action) {
-        let freq = document.getElementById('sub-frequency').value;
-        if(action === 'RX') printLog(`${freq} MHz bandı dinleniyor... Sinyal aranıyor...`);
-        if(action === 'TX') printLog(`${freq} MHz üzerinden kayıtlı ham veri (RAW) havaya fırlatılıyor!`);
-    }
-
-    // --- KEY DECODER FONKSİYONLARI ---
+    // --- KEY DECODER KONTROLLERİ ---
     function adjustScale(amount) {
         currentScale += amount;
         if(currentScale < 0.5) currentScale = 0.5;
         if(currentScale > 2.0) currentScale = 2.0;
         document.getElementById('keyVisual').style.transform = `scale(${currentScale})`;
-        printLog(`Ölçek Oranı: %${Math.round(currentScale * 100)}`);
+        printLog(`Çizelge Ölçeği: %${Math.round(currentScale * 100)}`);
     }
 
     function adjPin(pinNum, direction) {
@@ -427,7 +449,7 @@
         for(let i = 1; i <= 6; i++) {
             finalCode.push(document.getElementById(`pin${i}`).getAttribute('data-val'));
         }
-        printLog(`Anahtar Profili Belleğe Kaydedildi: ${finalCode.join(' ')}`);
+        printLog(`Anahtar Diş Kodları Alındı: ${finalCode.join(' ')}`);
     }
 </script>
 
