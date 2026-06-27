@@ -1,38 +1,73 @@
-// Arayüzdeki SİNYAL YAKALA butonu tetikleyicisi
-function startScanning() {
-    updateTerminal("SİNYAL DİNLENİYOR...");
-    
-    startNFCScan((result) => {
-        if (result.status === "SUCCESS") {
-            updateTerminal(`SİNYAL KAPILDI! UID: ${result.uid}`);
-            
-            // Burası önemli: Eğer ID boş değilse ekle
-            if (result.uid) {
-                addHistory(result.uid);
-            }
-        } else {
-            updateTerminal(result.message);
-        }
-    });
-}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>FLIPPER SHADOW-OS | NFC CORE</title>
+    <style>
+        :root { --orange: #ff8c00; --bg: #0b0b0b; }
+        body { background: var(--bg); color: var(--orange); font-family: 'Courier New', monospace; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .device-frame { border: 3px solid var(--orange); padding: 20px; width: 100%; max-width: 450px; border-radius: 15px; box-shadow: 0 0 25px rgba(255, 140, 0, 0.2); }
+        .terminal { height: 120px; background: #000; border: 1px solid var(--orange); padding: 10px; overflow-y: auto; font-size: 13px; margin-bottom: 15px; border-radius: 5px; color: #ffae42; }
+        .btn-main { background: var(--orange); color: #000; border: none; padding: 15px; width: 100%; cursor: pointer; font-weight: bold; border-radius: 5px; text-transform: uppercase; font-size: 14px; }
+        .btn-main:active { background: #cc7000; }
+        h4 { border-bottom: 1px solid var(--orange); padding-bottom: 8px; margin-top: 30px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding: 12px 0; font-size: 13px; }
+        .emit-btn { background: #222; color: var(--orange); border: 1px solid var(--orange); padding: 5px 15px; cursor: pointer; font-size: 11px; border-radius: 3px; }
+        .emit-btn:hover { background: var(--orange); color: #000; }
+    </style>
+</head>
+<body>
 
-function addHistory(uid) {
-    const list = document.getElementById('history');
-    
-    // Aynı ID zaten varsa tekrar ekleme
-    if (document.getElementById(`uid-${uid}`)) {
-        updateTerminal("SİNYAL ZATEN LİSTEDE.");
-        return;
+<div class="device-frame">
+    <h2 style="text-align: center; margin-top: 0;">SHADOW NFC ENGINE</h2>
+    <div id="terminal" class="terminal">> Sistem bekliyor...</div>
+    <button class="btn-main" onclick="startScanning()">SİNYAL YAKALA</button>
+
+    <h4>KAYITLI SİNYALLER</h4>
+    <div id="history"></div>
+</div>
+
+<script src="nfc_core.js"></script>
+<script>
+    function updateTerminal(msg) {
+        document.getElementById('terminal').innerHTML = `> ${msg}`;
     }
-    
-    const item = document.createElement('div');
-    item.className = 'history-item';
-    item.id = `uid-${uid}`; // Benzersiz ID atadık
-    item.innerHTML = `
-        <span style="font-size: 11px;">UID: ${uid}</span> 
-        <button class="emit-btn" onclick="emulateSignal('${uid}')">YAY</button>
-    `;
-    
-    // Listeye ekle (list'in içini temizlemiyoruz, append yapıyoruz)
-    list.prepend(item); 
-}
+
+    function startScanning() {
+        updateTerminal("SİNYAL DİNLENİYOR...");
+        startNFCScan((result) => {
+            if (result.status === "SUCCESS") {
+                updateTerminal(`SİNYAL KAPILDI! UID: ${result.uid}`);
+                addHistory(result.uid);
+            } else {
+                updateTerminal(result.message);
+            }
+        });
+    }
+
+    function addHistory(uid) {
+        const list = document.getElementById('history');
+        if (document.getElementById(`uid-${uid}`)) return;
+        
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.id = `uid-${uid}`;
+        item.innerHTML = `<span><strong>ID:</strong> ${uid}</span> 
+                          <button class="emit-btn" onclick="emulateSignal('${uid}')">YAY</button>`;
+        list.prepend(item);
+    }
+
+    function emulateSignal(uid) {
+        let speed = 0;
+        let interval = setInterval(() => {
+            speed += 20;
+            updateTerminal(`YAYILMA HIZI: ${speed} Mbps | UID: ${uid} | STATUS: EMULATING...`);
+            if (speed >= 100) {
+                clearInterval(interval);
+                updateTerminal(`BAŞARILI: ${uid} YANSITILDI.`);
+            }
+        }, 300);
+    }
+</script>
+</body>
+</html>
