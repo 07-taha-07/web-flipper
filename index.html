@@ -234,19 +234,26 @@
         input.value = input.value.replace(/[^0-9]/g, '');
     }
 
-    // Python Ortamını ve Paketleri Başlatan Güncel Fonksiyon
+    // Micropip destekli, "no known request" hatasını çözen taze başlatıcı fonksiyon
     async function initPythonEnv() {
         if (pyodideInstance) return;
         try {
             printLog("[SİSTEM]: Python motoru yükleniyor...");
             pyodideInstance = await loadPyodide({
-                stdout: (text) => { printLog(text); }, // Python print() komutları ekrana akar
+                stdout: (text) => { printLog(text); }, 
                 stderr: (text) => { printLog(`[HATA]: ${text}`, true); }
             });
             
-            // Pip hatasını aşmak için requests paketini Pyodide katmanında önceden kuruyoruz
-            printLog("[SİSTEM]: Bağımlılıklar sanal ortama kuruluyor (requests)...");
-            await pyodideInstance.loadPackage("requests");
+            // Güvenli paket yükleyici olan micropip modülünü hazırlıyoruz
+            printLog("[SİSTEM]: Paket yönetim sistemi (micropip) kuruluyor...");
+            await pyodideInstance.loadPackage("micropip");
+            
+            // requests paketini bağımlılıklarıyla birlikte hatasız indiriyoruz
+            printLog("[SİSTEM]: requests paketi sanal çevreye yükleniyor...");
+            await pyodideInstance.runPythonAsync(`
+                import micropip
+                await micropip.install('requests')
+            `);
             
             // Web arayüzü ile Python input() fonksiyonu arasına köprü kuruyoruz
             pyodideInstance.registerJsModule("js_input_bridge", {
@@ -262,7 +269,7 @@
             document.getElementById("sms-input").placeholder = "54xxxxxxxx";
             document.getElementById("sms-input").disabled = false;
             document.getElementById("sms-send-btn").disabled = false;
-            printLog("Python Çekirdeği Başlatıldı. Tüm kütüphane bağımlılıkları tamamlandı!");
+            printLog("Python Çekirdeği Başlatıldı. Tüm kütüphane bağımlılıkları kusursuz tamamlandı!");
         } catch (e) {
             document.getElementById("sms-prompt-lbl").innerText = "Python yükleme hatası!";
             printLog(`Python motoru yüklenirken sorun oluştu: ${e.message}`, true);
