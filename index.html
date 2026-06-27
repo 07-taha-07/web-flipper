@@ -16,6 +16,7 @@
             margin: 0;
             padding: 10px;
             box-sizing: border-box;
+            user-select: none;
         }
         .flipper-device {
             border: 4px solid #ff8c00;
@@ -26,7 +27,6 @@
             max-width: 440px;
             box-shadow: 0 0 35px rgba(255, 140, 0, 0.4);
         }
-        /* Dijital Ekran Modülü */
         .flipper-screen {
             border: 2px solid #ff8c00;
             background-color: #161616;
@@ -51,27 +51,74 @@
             margin: 3px 0;
             line-height: 1.4;
         }
-        /* Dinamik Anahtar Grafiği (Videodaki Özellik) */
+
+        /* DİNAMİK VE AYARLANABİLİR ANAHTAR DECODER ALANI (VİDEODAKİ SİSTEM) */
+        .decoder-wrapper {
+            border: 1px dashed #ff8c00;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: #111;
+            border-radius: 8px;
+        }
+        .scale-control-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            background: #222;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        .scale-control-panel button {
+            background: #ff8c00;
+            color: #000;
+            border: none;
+            padding: 5px 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: monospace;
+        }
         .key-decoder-visual {
             display: flex;
             justify-content: space-around;
             align-items: flex-end;
-            height: 50px;
+            height: 60px;
             border-bottom: 2px solid #ff8c00;
-            margin: 10px 0;
+            margin: 15px auto;
             padding-bottom: 5px;
+            width: 100%;
+            transition: transform 0.2s; /* Büyütme küçültme için */
+            transform-origin: bottom center;
+        }
+        .key-pin-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 14%;
+        }
+        .pin-adj-btn {
+            background: #222;
+            color: #ff8c00;
+            border: 1px solid #ff8c00;
+            font-size: 10px;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            font-weight: bold;
         }
         .key-pin {
-            width: 12px;
+            width: 14px;
             background-color: #ff8c00;
             text-align: center;
             color: #000;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
-            transition: height 0.3s;
+            margin: 4px 0;
+            height: 15px; /* JS ile dinamik değişecek */
         }
 
-        /* İşletim Sistemi Menüleri */
+        /* İŞLETİM SİSTEMİ SEKMELERİ */
         .os-menu {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -88,7 +135,6 @@
             cursor: pointer;
             font-family: monospace;
             border-radius: 4px;
-            transition: 0.2s;
         }
         .menu-btn.active {
             background-color: #ff8c00;
@@ -96,7 +142,6 @@
             box-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
         }
 
-        /* Sekme İçerikleri */
         .module-panel {
             display: none;
             border: 1px solid #333;
@@ -121,7 +166,6 @@
             border-radius: 4px;
         }
 
-        /* Kontrol Butonları */
         .action-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -163,21 +207,70 @@
         <button class="menu-btn" onclick="changeModule('net-mod')">NETWORK</button>
     </div>
 
+    <div id="key-mod" class="module-panel">
+        <h4>🔑 KEY DECODER (PRO)</h4>
+        
+        <div class="scale-control-panel">
+            <span style="font-size: 11px;">Çizelge Boyutu:</span>
+            <button onclick="adjustScale(0.1)">BÜYÜT (+)</button>
+            <button onclick="adjustScale(-0.1)">KÜÇÜLT (-)</button>
+        </div>
+
+        <div class="decoder-wrapper">
+            <div class="key-decoder-visual" id="keyVisual">
+                <div class="key-pin-box">
+                    <button class="pin-adj-btn" onclick="adjPin(1, 1)">+</button>
+                    <div class="key-pin" id="pin1" data-val="0">0</div>
+                    <button class="pin-adj-btn" onclick="adjPin(1, -1)">-</button>
+                </div>
+                <div class="key-pin-box">
+                    <button class="pin-adj-btn" onclick="adjPin(2, 1)">+</button>
+                    <div class="key-pin" id="pin2" data-val="0">0</div>
+                    <button class="pin-adj-btn" onclick="adjPin(2, -1)">-</button>
+                </div>
+                <div class="key-pin-box">
+                    <button class="pin-adj-btn" onclick="adjPin(3, 1)">+</button>
+                    <div class="key-pin" id="pin3" data-val="0">0</div>
+                    <button class="pin-adj-btn" onclick="adjPin(3, -1)">-</button>
+                </div>
+                <div class="key-pin-box">
+                    <button class="pin-adj-btn" onclick="adjPin(4, 1)">+</button>
+                    <div class="key-pin" id="pin4" data-val="0">0</div>
+                    <button class="pin-adj-btn" onclick="adjPin(4, -1)">-</button>
+                </div>
+                <div class="key-pin-box">
+                    <button class="pin-adj-btn" onclick="adjPin(5, 1)">+</button>
+                    <div class="key-pin" id="pin5" data-val="0">0</div>
+                    <button class="pin-adj-btn" onclick="adjPin(5, -1)">-</button>
+                </div>
+                <div class="key-pin-box">
+                    <button class="pin-adj-btn" onclick="adjPin(6, 1)">+</button>
+                    <div class="key-pin" id="pin6" data-val="0">0</div>
+                    <button class="pin-adj-btn" onclick="adjPin(6, -1)">-</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            <button class="ctrl-btn" style="grid-column: span 2;" onclick="getFinalKeyData()">AYARLANAN KODU SİSTEME KAYDET</button>
+        </div>
+    </div>
+
     <div id="ir-mod" class="module-panel active">
         <h4>📡 INFRARED TRANSMITTER</h4>
         <label>Cihaz / Sinyal Veritabanı:</label>
         <select id="ir-database">
-            <option value="Samsung">Samsung TV (Tüm Modeller)</option>
-            <option value="LG">LG Smart TV (WebOS)</option>
+            <option value="Samsung">Samsung TV</option>
+            <option value="LG">LG Smart TV</option>
             <option value="Sony">Sony Bravia</option>
-            <option value="Vestel">Vestel / Beko / Arçelik</option>
-            <option value="Klima">Universal Klima (Aç/Kapat)</option>
+            <option value="Vestel">Vestel / Beko</option>
+            <option value="Klima">Universal Klima</option>
         </select>
         <div class="action-grid">
-            <button class="ctrl-btn alert" onclick="runAction('IR_TX_POWER', 'GÜÇ kapatma kodu (HEX) kızılötesi ile fırlatıldı!')">GÜÇ (IR)</button>
+            <button class="ctrl-btn alert" onclick="runAction('IR_TX_POWER', 'GÜÇ kapatma kodu kızılötesi ile iletildi.')">GÜÇ (IR)</button>
             <button class="ctrl-btn" onclick="runAction('IR_TX_MUTE', 'SES KESME sinyali gönderildi.')">SES KES</button>
-            <button class="ctrl-btn" onclick="runAction('IR_TX_SRC', 'KAYNAK (Source/HDMI) sinyali fırlatıldı.')">KAYNAK</button>
-            <button class="ctrl-btn" onclick="runAction('IR_RX', 'Kızılötesi alıcı aktif. Kumandayı telefona doğrultup basın...')">KODU KOPYALA</button>
+            <button class="ctrl-btn" onclick="runAction('IR_TX_SRC', 'KAYNAK değiştirme sinyali fırlatıldı.')">KAYNAK</button>
+            <button class="ctrl-btn" onclick="runAction('IR_RX', 'Kızılötesi alıcı aktif. Kumandayı doğrultup basın...')">KODU KOPYALA</button>
         </div>
     </div>
 
@@ -185,13 +278,13 @@
         <h4>📻 SUB-GHz RADIO</h4>
         <label>Frekans Modülasyonu:</label>
         <select id="sub-frequency">
-            <option value="433.92">433.92 MHz (Araba / Garaj Kumandaları)</option>
-            <option value="315.00">315.00 MHz (Bariyer Kumandaları)</option>
-            <option value="868.35">868.35 MHz (Güvenlikli Geçişler)</option>
+            <option value="433.92">433.92 MHz (Araba / Garaj)</option>
+            <option value="315.00">315.00 MHz (Bariyerler)</option>
+            <option value="868.35">868.35 MHz (Güvenlikli Kapılar)</option>
         </select>
         <div class="action-grid">
-            <button class="ctrl-btn" onclick="runAction('SUB_RX', 'Sinyal dinleniyor... Kumandaya basın.')">SİNYAL YAKALA</button>
-            <button class="ctrl-btn alert" onclick="runAction('SUB_TX', 'Kopyalanan frekans kodu havaya yayılıyor (Emülasyon)!')">SİNYAL YAY (TX)</button>
+            <button class="ctrl-btn" onclick="runAction('SUB_RX', 'Sinyal dinleniyor... Anahtara basın.')">SİNYAL YAKALA</button>
+            <button class="ctrl-btn alert" onclick="runAction('SUB_TX', 'Kopyalanan frekans kodu yayınlanıyor!')">SİNYAL YAY (TX)</button>
         </div>
     </div>
 
@@ -199,29 +292,13 @@
         <h4>💳 NFC & RFID EMULATOR</h4>
         <label>Kart Protokolü:</label>
         <select id="nfc-protocol">
-            <option value="Mifare">Mifare Classic 1K (Ulaşım / Otel Kartları)</option>
-            <option value="RFID 125">RFID 125 kHz (Bina Giriş Anahtarlığı)</option>
-            <option value="NTAG">NTAG21X (RFID Etiketler)</option>
+            <option value="Mifare">Mifare Classic 1K (Otobüs/Otel)</option>
+            <option value="RFID 125">RFID 125 kHz (Göstergeç)</option>
+            <option value="NTAG">NTAG21X (RFID Etiket)</option>
         </select>
         <div class="action-grid">
-            <button class="ctrl-btn" onclick="runAction('NFC_SCAN', 'NFC alanı aktif. Kartı telefonun arkasına dokundurun...')">KART OKU / KOPYALA</button>
-            <button class="ctrl-btn alert" onclick="runAction('NFC_EMU', 'Kart UID kodu kopyalandı! Kart simüle ediliyor...')">KARTI YAYINLA</button>
-        </div>
-    </div>
-
-    <div id="key-mod" class="module-panel">
-        <h4>🔑 MECHANICAL KEY DECODER</h4>
-        <p style="font-size: 11px; margin: 0 0 10px 0; text-align: center;">Kamerayı anahtara doğrultun veya değerleri analiz edin.</p>
-        <div class="key-decoder-visual">
-            <div class="key-pin" id="pin1" style="height: 10px;">0</div>
-            <div class="key-pin" id="pin2" style="height: 10px;">0</div>
-            <div class="key-pin" id="pin3" style="height: 10px;">0</div>
-            <div class="key-pin" id="pin4" style="height: 10px;">0</div>
-            <div class="key-pin" id="pin5" style="height: 10px;">0</div>
-            <div class="key-pin" id="pin6" style="height: 10px;">0</div>
-        </div>
-        <div class="action-grid">
-            <button class="ctrl-btn" style="grid-column: span 2;" onclick="decodeKey()">ANAHTARI ANALİZ ET / KODU AL</button>
+            <button class="ctrl-btn" onclick="runAction('NFC_SCAN', 'NFC alanı aktif. Kartı yaklaştırın...')">KART OKU / KOPYALA</button>
+            <button class="ctrl-btn alert" onclick="runAction('NFC_EMU', 'Kart UID kodu simüle ediliyor...')">KARTI YAYINLA</button>
         </div>
     </div>
 
@@ -229,11 +306,11 @@
         <h4>⌨️ BAD USB SCRIPT GENERATOR</h4>
         <label>Saldırı Senaryosu:</label>
         <select id="usb-payload">
-            <option value="WIFI">Sistemdeki Tüm Kayıtlı Wi-Fi Şifrelerini Göster</option>
-            <option value="LOCK">Hedef Bilgisayarı Saniyeler İçinde Kilitle</option>
-            <option value="FAKE">Sahte Windows Çökme Ekranı Tetikle</option>
+            <option value="WIFI">Kayıtlı Wi-Fi Şifrelerini Göster</option>
+            <option value="LOCK">Hedef Bilgisayarı Kilitle</option>
+            <option value="FAKE">Sahte Windows Çökme Ekranı Aç</option>
         </select>
-        <button class="ctrl-btn" style="width: 100%;" onclick="runAction('BAD_USB', 'DuckyScript derlendi! Kod panoya kopyalandı.')">PAYLOAD ÜRET</button>
+        <button class="ctrl-btn" style="width: 100%;" onclick="runAction('BAD_USB', 'DuckyScript derlendi ve panoya kopyalandı!')">PAYLOAD ÜRET</button>
     </div>
 
     <div id="net-mod" class="module-panel">
@@ -242,13 +319,15 @@
         <input type="text" id="target-ip" value="192.168.1.1">
         <div class="action-grid">
             <button class="ctrl-btn" onclick="runAction('NET_PING', 'Paketler gönderiliyor...')">PING TEST</button>
-            <button class="ctrl-btn" onclick="runAction('NET_SCAN', 'Wi-Fi ağındaki IP adresleri listeleniyor...')">AĞI TARA</button>
+            <button class="ctrl-btn" onclick="runAction('NET_SCAN', 'Ağdaki aktif IP adresleri listeleniyor...')">AĞI TARA</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Modüller arası geçiş sistemi
+    // Global ölçek değişkeni (Çizelge boyutu için)
+    let currentScale = 1.0;
+
     function changeModule(modId) {
         document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
@@ -259,7 +338,6 @@
         printLog(`Modül aktif edildi: ${modId.replace('-mod', '').toUpperCase()}`);
     }
 
-    // Ekranda log gösterme fonksiyonu
     function printLog(text) {
         let container = document.getElementById('displayLogs');
         let row = document.createElement('div');
@@ -271,11 +349,8 @@
         screen.scrollTop = screen.scrollHeight;
     }
 
-    // Aksiyon tetikleyici ara yüz fonksiyonu
     function runAction(type, msg) {
         printLog(msg);
-        
-        // Buraya ilerleyen süreçte donanımsal scriptlerimizi veya fetch komutlarımızı entegre edeceğiz
         if(type === 'NFC_SCAN') {
             setTimeout(() => printLog("Kart Algılandı! UID: 04:DE:7E:AA:B2:5C:80"), 1500);
         }
@@ -284,29 +359,40 @@
         }
     }
 
-    // Mekanik Anahtar Derinliği Çözücü (Videodaki Özel Sistem)
-    function decodeKey() {
-        printLog("Anahtar profili taranıyor...");
-        
-        // Rastgele gerçekçi anahtar diş kodları simüle edelim (Örn videodaki gibi)
-        let codes = [
-            Math.floor(Math.random() * 9),
-            Math.floor(Math.random() * 9),
-            Math.floor(Math.random() * 9),
-            Math.floor(Math.random() * 9),
-            Math.floor(Math.random() * 9),
-            Math.floor(Math.random() * 9)
-        ];
+    // --- ANAHTAR DECODER İNTERAKTİF MOTORU ---
+    
+    // Çizelgeyi büyütüp küçülten fonksiyon
+    function adjustScale(amount) {
+        currentScale += amount;
+        if(currentScale < 0.5) currentScale = 0.5; // Çok küçülmesin
+        if(currentScale > 2.0) currentScale = 2.0; // Çok büyümesin
+        document.getElementById('keyVisual').style.transform = `scale(${currentScale})`;
+        printLog(`Ölçek Oranı Değiştirildi: %${Math.round(currentScale * 100)}`);
+    }
 
-        setTimeout(() => {
-            for(let i = 1; i <= 6; i++) {
-                let pinVal = codes[i-1];
-                let pinElement = document.getElementById(`pin${i}`);
-                pinElement.innerText = pinVal;
-                pinElement.style.height = `${(pinVal + 1) * 5}px`; // Grafiği yükseltip düşürür
-            }
-            printLog(`Anahtar Kodu Çözüldü: ${codes.join(' ')} (SC4)`);
-        }, 1200);
+    // Dişleri aşağı yukarı elle hareket ettiren fonksiyon
+    function adjPin(pinNum, direction) {
+        let pin = document.getElementById(`pin${pinNum}`);
+        let currentVal = parseInt(pin.getAttribute('data-val'));
+        
+        currentVal += direction;
+        if(currentVal < 0) currentVal = 0; // Sınır
+        if(currentVal > 9) currentVal = 9; // Sınır
+        
+        pin.setAttribute('data-val', currentVal);
+        pin.innerText = currentVal;
+        
+        // Yüksekliği değere göre değiştiriyoruz (0 en kısa, 9 en uzun)
+        pin.style.height = `${15 + (currentVal * 4)}px`;
+    }
+
+    // Elle girilen nihai kodu sisteme basan buton fonksiyonu
+    function getFinalKeyData() {
+        let finalCode = [];
+        for(let i = 1; i <= 6; i++) {
+            finalCode.push(document.getElementById(`pin${i}`).getAttribute('data-val'));
+        }
+        printLog(`Manuel Anahtar Kodu Kaydedildi: ${finalCode.join(' ')} (SC4)`);
     }
 </script>
 
